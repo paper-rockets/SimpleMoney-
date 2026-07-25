@@ -535,7 +535,7 @@
         </div>
 
         <!-- Truth Anchor Input -->
-        <input type="number" id="balance-input" placeholder="Enter current bank balance..." step="1">
+        <input type="number" id="balance-input" placeholder="Enter current bank balance..." step="0.01">
 
         <!-- The Primary Metrics -->
         <div class="metric-container">
@@ -831,7 +831,7 @@
                     </div>
                     <div class="bill-right-col">
                         <span class="bill-amount ${nameClass}">$</span>
-                        <input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="1">
+                        <input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
                         <div class="action-slot">
                             ${pushAction}
                         </div>
