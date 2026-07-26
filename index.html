@@ -975,19 +975,31 @@
             if (!queryText) return;
 
             const container = document.getElementById("ai-response-container");
-            const safeDaily = document.getElementById("safe-to-spend").innerText;
-            const safeTotal = document.getElementById("total-safe").innerText;
-
             container.innerHTML = `<div class="ai-output-card">Processing query...</div>`;
 
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            const cyclesSummary = [0, 1, 2, 3].map(offset => {
+                const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
+                const end = new Date(start.getTime() + (14 * msPerDay));
+                const cycleData = getExpensesForViewedCycle(offset);
+                const startingInc = offset === 0 ? state.currentBalance : 1790.00;
+                const remaining = startingInc - cycleData.total;
+                const title = offset === 0 ? "Current cycle" : `Next cycle ${offset}`;
+                const billsListStr = cycleData.list.map(b => `${b.name}: $${Math.round(b.amount)}`).join(", ");
+                return `${title} (${formatDate(start)} - ${formatDate(end)}): Income $${Math.round(startingInc)}, Total Bills Due $${Math.round(cycleData.totalBillsSum)}, Remaining Safe Total $${Math.round(remaining)}. Bills: [${billsListStr}]`;
+            }).join('\n');
+
             const financialContext = `
-                Contextual Data:
-                - Current view safe to spend: ${safeDaily}
-                - Current view total disposable liquidity: ${safeTotal}
-                - Days remaining in current cycle: ${state.daysRemaining}
+                User Financial Context (All 4 Cycles Overview):
+                ${cyclesSummary}
+
+                Currently Viewing: Cycle Offset ${state.viewOffset}
+                Days Remaining in Current Cycle: ${state.daysRemaining}
                 User Financial Query: "${queryText}"
 
-                Instructions: Answer the query directly and accurately using the context metadata provided. Keep it straightforward.
+                Instructions: Answer the user's financial question directly, concisely, and accurately based on the full 4-cycle overview provided.
             `;
 
             let apiKey = getApiKey();
