@@ -703,7 +703,7 @@
 
                 return `<div class="${classNames}" onclick="setViewCycle(${c.offset})" style="display:flex; justify-content:space-between; align-items:center;">
                     <span>${title}: ${formatDate(c.start)} – ${formatDate(c.end)}</span>
-                    <span style="font-weight:700; opacity:0.9;">$${c.sum.toLocaleString()}</span>
+                    <span style="font-weight:700; opacity:0.9;">Bills: $${c.sum.toLocaleString()}</span>
                 </div>`;
             }).join('');
 
@@ -736,10 +736,8 @@
                     : exp.amount;
 
                 totalBillsSum += amount;
-                if (targetOffset === 0) {
-                    if (!isPaid) cycleLiability += amount;
-                } else {
-                    if (today >= viewCycleStart && !isPaid) cycleLiability += amount;
+                if (!isPaid) {
+                    cycleLiability += amount;
                 }
                 activeBills.push({...exp, amount, id: instanceId, isBiweekly: true});
             });
@@ -769,12 +767,8 @@
 
                             if (isViewCycle) {
                                 totalBillsSum += amount;
-                                if (targetOffset === 0) {
-                                    if (!isPaid) cycleLiability += amount;
-                                } else {
-                                    if (billDate <= today && !isPaid) {
-                                        cycleLiability += amount;
-                                    }
+                                if (!isPaid) {
+                                    cycleLiability += amount;
                                 }
 
                                 activeBills.push({
