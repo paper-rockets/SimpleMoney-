@@ -529,6 +529,23 @@
 <body>
 
     <div id="app-container">
+        <!-- Auth Bar -->
+        <div id="auth-bar" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); font-size: 0.82em;">
+            <div id="user-info" style="display: flex; align-items: center; gap: 8px;">
+                <img id="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; display: none; object-fit: cover;" src="" alt="Avatar">
+                <span id="user-email" style="color: var(--text-dim); font-weight: 500;">Guest Mode</span>
+            </div>
+            <button id="auth-action-btn" class="secondary" style="padding: 6px 14px; font-size: 0.82em; min-width: auto; flex: none; display: flex; align-items: center; gap: 6px; border-radius: 8px; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0;">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span id="auth-btn-text">Sign in with Google</span>
+            </button>
+        </div>
+
         <!-- System Status -->
         <div class="header-text" id="cycle-header">
             <!-- Populated via JS -->
@@ -567,6 +584,17 @@
                 <button class="secondary" onclick="alert('Plaid Auth Flow Initiated (Placeholder)')">Sync bank</button>
             </div>
             <div id="ai-response-container"></div>
+
+            <!-- Firebase Storage Receipts Section -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display:flex; flex-direction:column; gap:10px;">
+                <span class="settings-label">Receipts & Firebase Storage</span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="file" id="receipt-file-input" style="font-size: 0.8em; color: var(--text-dim); flex: 1; min-width: 160px;">
+                    <button class="secondary" style="padding: 6px 12px; font-size: 0.8em; min-width: auto; flex: none;" onclick="uploadSelectedReceipt()">Upload Receipt</button>
+                </div>
+                <div id="receipt-upload-status" style="font-size: 0.75em; color: var(--text-dim);"></div>
+                <div id="receipts-list" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82em; margin-top: 4px;"></div>
+            </div>
 
             <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display:flex; flex-direction:column; gap:12px;">
                 <div class="settings-row">
@@ -1212,16 +1240,18 @@
         }
     </script>
 
-    <!-- Initialize Firebase -->
+    <!-- Initialize Firebase Auth, Firestore, and Storage -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDMPrE5x6i9kZ4y7l6jhhHZsDLLkxC2iwA",
+            apiKey: "AIzaSyDyW2mNr3wOXjVYAPH75igXzKuiPJHVRrU",
             authDomain: "simplemoney-9a580.firebaseapp.com",
             projectId: "simplemoney-9a580",
-            storageBucket: "simplemoney-9a580.firebasestorage.app",
+            storageBucket: "simplenote-10e1b.firebasestorage.app",
             messagingSenderId: "24565452816",
             appId: "1:24565452816:web:e36de95c0760fd70ac7a95",
             measurementId: "G-G6LJRY0YE3"
@@ -1229,12 +1259,67 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+        const googleProvider = new GoogleAuthProvider();
 
-        // Generate or retrieve User ID to scope storage
+        let currentUser = null;
         let userId = localStorage.getItem('simplemoney_user_id');
         if (!userId) {
-            userId = 'user_' + Math.random().toString(36).substring(2, 11);
+            userId = 'guest_' + Math.random().toString(36).substring(2, 11);
             localStorage.setItem('simplemoney_user_id', userId);
+        }
+
+        // Listen for Auth state changes
+        onAuthStateChanged(auth, async (user) => {
+            const userEmail = document.getElementById('user-email');
+            const userAvatar = document.getElementById('user-avatar');
+            const authBtnText = document.getElementById('auth-btn-text');
+
+            if (user) {
+                currentUser = user;
+                userId = user.uid;
+                if (userEmail) userEmail.textContent = user.email || user.displayName;
+                if (userAvatar) {
+                    userAvatar.src = user.photoURL || '';
+                    userAvatar.style.display = user.photoURL ? 'inline-block' : 'none';
+                }
+                if (authBtnText) authBtnText.textContent = 'Sign Out';
+                console.log("Logged in user:", user.email, user.uid);
+                loadStateFromFirebase();
+                loadUserReceipts();
+            } else {
+                currentUser = null;
+                userId = 'guest_' + (localStorage.getItem('simplemoney_user_id') || Math.random().toString(36).substring(2, 11));
+                if (userEmail) userEmail.textContent = 'Guest Mode';
+                if (userAvatar) userAvatar.style.display = 'none';
+                if (authBtnText) authBtnText.textContent = 'Sign in with Google';
+                console.log("Guest Mode / Logged out");
+                loadStateFromFirebase();
+            }
+        });
+
+        // Google Authentication handler
+        window.handleAuthAction = async function() {
+            if (auth.currentUser) {
+                try {
+                    await signOut(auth);
+                } catch (e) {
+                    console.error("Error signing out:", e);
+                }
+            } else {
+                try {
+                    await signInWithPopup(auth, googleProvider);
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                    alert("Sign in failed: " + error.message);
+                }
+            }
+        };
+
+        const authBtn = document.getElementById('auth-action-btn');
+        if (authBtn) {
+            authBtn.addEventListener('click', window.handleAuthAction);
         }
 
         // Expose save function to window
@@ -1248,6 +1333,7 @@
                     paidBills: state.paidBills,
                     updatedAt: new Date().toISOString()
                 });
+                console.log("State saved to Firestore for user:", userId);
             } catch (e) {
                 console.error("Error saving state to Firestore:", e);
             }
@@ -1262,7 +1348,6 @@
                     const remoteData = docSnap.data();
                     console.log("Loaded remote state from Firestore:", remoteData);
                     
-                    // Retrieve local state to compare timestamps
                     let localData = null;
                     try {
                         const s = localStorage.getItem('simplemoney-state-data');
@@ -1278,11 +1363,9 @@
                     const hasRemotePaidBills = remoteData.paidBills && remoteData.paidBills.length > 0;
 
                     if (localTime > remoteTime || (hasLocalBalance && !hasRemoteBalance) || (hasLocalPaidBills && !hasRemotePaidBills)) {
-                        // Local state is newer, or remote state is uninitialized. Sync local to remote.
                         console.log("Local state is newer or remote is uninitialized. Syncing local to remote...");
                         if (window.saveStateToFirebase) window.saveStateToFirebase();
                     } else {
-                        // Remote state is newer or equal. Sync remote to local.
                         console.log("Remote state is newer/equal. Syncing remote to local...");
                         if (remoteData.currentBalance !== undefined) {
                             state.currentBalance = remoteData.currentBalance;
@@ -1295,7 +1378,6 @@
                         if (remoteData.paidBills) state.paidBills = remoteData.paidBills;
 
                         recalculateCashFlow();
-                        // Save the synced state locally without triggering timestamp update (keep remote timestamp)
                         try {
                             localStorage.setItem('simplemoney-state-data', JSON.stringify({
                                 currentBalance: state.currentBalance,
@@ -1308,7 +1390,6 @@
                         } catch (err) {}
                     }
                 } else {
-                    // Document doesn't exist on Firestore yet, upload current local state
                     console.log("No remote Firestore document found. Uploading current local state...");
                     if (window.saveStateToFirebase) window.saveStateToFirebase();
                 }
@@ -1316,6 +1397,54 @@
                 console.error("Error loading state from Firestore:", e);
             }
         }
+
+        // Firebase Storage: Upload Receipt
+        window.uploadSelectedReceipt = async function() {
+            const fileInput = document.getElementById('receipt-file-input');
+            const statusDiv = document.getElementById('receipt-upload-status');
+            if (!fileInput || !fileInput.files[0]) {
+                alert("Please select a file to upload.");
+                return;
+            }
+            const file = fileInput.files[0];
+            if (statusDiv) statusDiv.textContent = "Uploading " + file.name + "...";
+
+            try {
+                const storageRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
+                await uploadBytes(storageRef, file);
+                const downloadUrl = await getDownloadURL(storageRef);
+                if (statusDiv) statusDiv.textContent = "Upload successful!";
+                fileInput.value = "";
+                loadUserReceipts();
+            } catch (err) {
+                console.error("Storage upload error:", err);
+                if (statusDiv) statusDiv.textContent = "Upload failed: " + err.message;
+            }
+        };
+
+        // Firebase Storage: Load User Receipts
+        window.loadUserReceipts = async function() {
+            const receiptsList = document.getElementById('receipts-list');
+            if (!receiptsList) return;
+            try {
+                const listRef = ref(storage, `receipts/${userId}`);
+                const res = await listAll(listRef);
+                if (res.items.length === 0) {
+                    receiptsList.innerHTML = `<span style="color: var(--text-dim);">No uploaded receipts.</span>`;
+                    return;
+                }
+                receiptsList.innerHTML = "";
+                for (const itemRef of res.items) {
+                    const url = await getDownloadURL(itemRef);
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.cssText = "display: flex; justify-content: space-between; align-items: center;";
+                    itemDiv.innerHTML = `<a href="${url}" target="_blank" style="color: #4a90e2; text-decoration: underline;">📄 ${itemRef.name.replace(/^\d+_/, '')}</a>`;
+                    receiptsList.appendChild(itemDiv);
+                }
+            } catch (e) {
+                console.log("No receipts found or storage uninitialized:", e);
+            }
+        };
 
         // Initialize loading
         loadStateFromFirebase();
