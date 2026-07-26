@@ -917,7 +917,14 @@
             const totalSafeEl = document.getElementById("total-safe");
             const safeToSpendEl = document.getElementById("safe-to-spend");
 
-            if (disposableLiquidity < 0) {
+            const isCurrentCycleUnset = (state.viewOffset === 0 && (!state.currentBalance || state.currentBalance === 0));
+
+            if (isCurrentCycleUnset) {
+                totalSafeEl.innerText = "ENTER BANK BALANCE ABOVE";
+                totalSafeEl.style.color = 'var(--text-dim)';
+                safeToSpendEl.innerText = `BILLS DUE: $${Math.round(cycleData.total)}`;
+                safeToSpendEl.style.color = 'var(--text-dim)';
+            } else if (disposableLiquidity < 0) {
                 totalSafeEl.innerText = `WARNING: -$${Math.abs(Math.round(disposableLiquidity))}`;
                 totalSafeEl.style.color = 'var(--danger-color)';
                 safeToSpendEl.innerText = `SHORTFALL`;
