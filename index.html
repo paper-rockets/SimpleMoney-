@@ -826,10 +826,11 @@
             const cycleData = getExpensesForViewedCycle();
 
             const labelEl = document.getElementById("bills-section-label");
+            const totalSumFormatted = Math.round(cycleData.totalBillsSum).toLocaleString();
             if (state.viewOffset === 0) {
-                labelEl.innerText = "Active bills & liabilities";
+                labelEl.innerText = `Active bills & liabilities ($${totalSumFormatted})`;
             } else {
-                labelEl.innerText = `Upcoming bills (next cycle ${state.viewOffset})`;
+                labelEl.innerText = `Upcoming bills (next cycle ${state.viewOffset}) ($${totalSumFormatted})`;
             }
 
             const listEl = document.getElementById("bills-list");
