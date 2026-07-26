@@ -564,7 +564,7 @@
             <div class="action-row">
                 <button onclick="executeLiveTextQuery()">Ask Gemini</button>
                 <button class="secondary" id="voice-btn" onclick="toggleVoiceRecording()">Voice input</button>
-                <button class="secondary" onclick="alert('Plaid Auth Flow Initiated (Placeholder)')">Sync bank</button>
+                <button class="secondary" onclick="deleteApiKey()" style="color:var(--danger-color); border-color:rgba(217,83,79,0.3);">Delete Key</button>
             </div>
             <div id="ai-response-container"></div>
 
@@ -636,6 +636,15 @@
                 localStorage.setItem('gemini-api-key', newKey.trim());
                 executeLiveTextQuery();
             }
+        }
+
+        function deleteApiKey() {
+            localStorage.removeItem('gemini-api-key');
+            const container = document.getElementById("ai-response-container");
+            if (container) {
+                container.innerHTML = `<div class="ai-output-card" style="color:var(--text-dim);">Gemini API Key removed.</div>`;
+            }
+            alert("Saved Gemini API Key deleted!");
         }
 
         // --- 1. CORE STATE ---
