@@ -881,9 +881,23 @@
                 listEl.appendChild(row);
             });
 
-            let disposableLiquidity = state.currentBalance - cycleData.total;
+            const startingIncome = state.viewOffset === 0 ? state.currentBalance : 1790.00;
+            let disposableLiquidity = startingIncome - cycleData.total;
             let daysDivisor = state.viewOffset === 0 ? state.daysRemaining : 14;
             let safeToSpendDaily = disposableLiquidity / daysDivisor;
+
+            const balInput = document.getElementById("balance-input");
+            if (balInput) {
+                if (state.viewOffset === 0) {
+                    balInput.disabled = false;
+                    balInput.placeholder = "Enter current bank balance...";
+                    balInput.value = state.currentBalance !== 0 ? state.currentBalance : '';
+                } else {
+                    balInput.disabled = true;
+                    balInput.placeholder = "Next cycle income ($1,790)";
+                    balInput.value = 1790;
+                }
+            }
 
             const totalSafeEl = document.getElementById("total-safe");
             const safeToSpendEl = document.getElementById("safe-to-spend");
@@ -904,6 +918,7 @@
         // --- 5. INTERACTIONS ---
         const balInput = document.getElementById("balance-input");
         const handleBalanceInput = (e) => {
+            if (state.viewOffset !== 0) return;
             const val = parseFloat(e.target.value);
             state.currentBalance = isNaN(val) ? 0 : val;
             recalculateCashFlow();
