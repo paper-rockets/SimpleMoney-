@@ -844,11 +844,20 @@
             let daysDivisor = state.viewOffset === 0 ? state.daysRemaining : 14;
             let safeToSpendDaily = disposableLiquidity / daysDivisor;
 
-            if (disposableLiquidity < 0) disposableLiquidity = 0;
-            if (safeToSpendDaily < 0) safeToSpendDaily = 0;
+            const totalSafeEl = document.getElementById("total-safe");
+            const safeToSpendEl = document.getElementById("safe-to-spend");
 
-            document.getElementById("total-safe").innerText = `TOTAL: $${Math.round(disposableLiquidity)}`;
-            document.getElementById("safe-to-spend").innerText = `$${Math.round(safeToSpendDaily)} / day`;
+            if (disposableLiquidity < 0) {
+                totalSafeEl.innerText = `WARNING: -$${Math.abs(Math.round(disposableLiquidity))}`;
+                totalSafeEl.style.color = 'var(--danger-color)';
+                safeToSpendEl.innerText = `SHORTFALL`;
+                safeToSpendEl.style.color = 'var(--danger-color)';
+            } else {
+                totalSafeEl.innerText = `TOTAL: $${Math.round(disposableLiquidity)}`;
+                totalSafeEl.style.color = '';
+                safeToSpendEl.innerText = `$${Math.round(safeToSpendDaily)} / day`;
+                safeToSpendEl.style.color = '';
+            }
         }
 
         // --- 5. INTERACTIONS ---
