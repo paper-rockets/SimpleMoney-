@@ -1019,9 +1019,11 @@
                 console.error("Gemini query failed:", lastError);
                 container.innerHTML = `
                     <div class="ai-output-card" style="color:var(--danger-color)">
-                        <strong>Gemini Error:</strong> ${errMsg}
+                        <strong>Gemini API Error:</strong> ${errMsg}
                         <br><br>
-                        <button onclick="promptNewApiKey()" style="font-size:0.85em; padding:6px 12px; cursor:pointer; background:var(--text-main); color:var(--bg-color); border:none; border-radius:6px; font-weight:600;">🔑 Change Gemini API Key</button>
+                        <em>Tip: Get a free key starting with <strong>AIzaSy...</strong> from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#4a90e2; text-decoration:underline;">Google AI Studio</a>.</em>
+                        <br><br>
+                        <button onclick="promptNewApiKey()" style="font-size:0.85em; padding:6px 12px; cursor:pointer; background:var(--text-main); color:var(--bg-color); border:none; border-radius:6px; font-weight:600;">🔑 Enter New Gemini API Key</button>
                     </div>
                 `;
             }
