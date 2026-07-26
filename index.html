@@ -691,7 +691,9 @@
             const cycles = [0, 1, 2].map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(start.getTime() + (14 * msPerDay));
-                return { offset, start, end };
+                const cycleData = getExpensesForViewedCycle(offset);
+                const sum = Math.round(cycleData.totalBillsSum);
+                return { offset, start, end, sum };
             });
 
             const headerHTML = cycles.map(c => {
@@ -699,7 +701,10 @@
                 const title = c.offset === 0 ? "Current cycle" : `Next cycle ${c.offset}`;
                 const classNames = `cycle-selector ${isSelected ? 'active' : 'clickable'}`;
 
-                return `<div class="${classNames}" onclick="setViewCycle(${c.offset})">${title}: ${formatDate(c.start)} – ${formatDate(c.end)}</div>`;
+                return `<div class="${classNames}" onclick="setViewCycle(${c.offset})" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>${title}: ${formatDate(c.start)} – ${formatDate(c.end)}</span>
+                    <span style="font-weight:700; opacity:0.9;">$${c.sum.toLocaleString()}</span>
+                </div>`;
             }).join('');
 
             document.getElementById("cycle-header").innerHTML = headerHTML;
@@ -712,14 +717,15 @@
         }
 
         // --- 3. LOOK-AHEAD ALGORITHM ---
-        function getExpensesForViewedCycle() {
+        function getExpensesForViewedCycle(targetOffset = state.viewOffset) {
             let cycleLiability = 0;
+            let totalBillsSum = 0;
             let activeBills = [];
             const msPerDay = 1000 * 60 * 60 * 24;
             const today = new Date();
 
-            const viewCycleIndex = state.currentCycleIndex + state.viewOffset;
-            const viewCycleStart = new Date(state.cycleStart.getTime() + (state.viewOffset * 14 * msPerDay));
+            const viewCycleIndex = state.currentCycleIndex + targetOffset;
+            const viewCycleStart = new Date(state.cycleStart.getTime() + (targetOffset * 14 * msPerDay));
             const viewCycleEnd = new Date(viewCycleStart.getTime() + (14 * msPerDay));
 
             state.biweeklyExpenses.forEach(exp => {
@@ -729,7 +735,8 @@
                     ? state.customAmounts[instanceId]
                     : exp.amount;
 
-                if (state.viewOffset === 0) {
+                totalBillsSum += amount;
+                if (targetOffset === 0) {
                     if (!isPaid) cycleLiability += amount;
                 } else {
                     if (today >= viewCycleStart && !isPaid) cycleLiability += amount;
@@ -760,8 +767,9 @@
                                 ? state.customAmounts[instanceId]
                                 : exp.amount;
 
-                            if (isViewCycle || !isPaid) {
-                                if (state.viewOffset === 0) {
+                            if (isViewCycle) {
+                                totalBillsSum += amount;
+                                if (targetOffset === 0) {
                                     if (!isPaid) cycleLiability += amount;
                                 } else {
                                     if (billDate <= today && !isPaid) {
@@ -776,6 +784,16 @@
                                     isBiweekly: false,
                                     originalDate: billDate,
                                     isOverdue: billDate <= today && !isPaid
+                                });
+                            } else if (targetOffset === 0 && !isPaid) {
+                                cycleLiability += amount;
+                                activeBills.push({
+                                    ...exp,
+                                    amount,
+                                    id: instanceId,
+                                    isBiweekly: false,
+                                    originalDate: billDate,
+                                    isOverdue: true
                                 });
                             }
                         }
@@ -793,7 +811,7 @@
                 return 0;
             });
 
-            return { total: cycleLiability, list: activeBills };
+            return { total: cycleLiability, totalBillsSum, list: activeBills };
         }
 
         // --- 4. CALCULATION & UI UPDATE ---
