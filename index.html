@@ -453,6 +453,44 @@
             opacity: 0.85;
         }
 
+        .add-bill-btn {
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            color: var(--text-dim);
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 0.82em;
+        }
+
+        .add-bill-form {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .add-bill-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-bill-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .add-bill-type-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85em;
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+
         .ai-output-card {
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
@@ -547,6 +585,23 @@
         <div class="section-label" id="bills-section-label">Active bills & liabilities</div>
         <div id="bills-list">
             <!-- Populated via JS -->
+        </div>
+
+        <button type="button" class="add-bill-btn" id="add-bill-toggle-btn" onclick="toggleAddBillForm()">+ Add bill</button>
+        <div id="add-bill-form" class="add-bill-form">
+            <input type="text" id="new-bill-name" placeholder="Bill name">
+            <div class="add-bill-row">
+                <input type="number" id="new-bill-amount" placeholder="Amount" step="0.01">
+                <input type="number" id="new-bill-dueday" placeholder="Due day (1-31)" min="1" max="31">
+            </div>
+            <label class="add-bill-type-label">
+                <input type="checkbox" id="new-bill-biweekly" onchange="toggleNewBillDueDay()">
+                Biweekly (flexible, every cycle)
+            </label>
+            <div class="action-row">
+                <button type="button" onclick="submitNewBill()">Add bill</button>
+                <button type="button" class="secondary" onclick="toggleAddBillForm(false)">Cancel</button>
+            </div>
         </div>
 
         <!-- Toggle Button: reveals Gemini tools + settings -->
@@ -776,39 +831,41 @@
 
                     if (billDate >= BASE_PAYDAY && billDate < viewCycleEnd) {
                         const instanceId = `${exp.id}_${y}_${m}`;
+                        const isDeferred = state.deferredBills.includes(instanceId);
+                        // Deferring a bill pushes its effective due date one cycle later
+                        // instead of removing it from the schedule entirely.
+                        const effectiveDate = isDeferred ? new Date(billDate.getTime() + 14 * msPerDay) : billDate;
 
-                        if (!state.deferredBills.includes(instanceId)) {
-                            const isPaid = state.paidBills.includes(instanceId);
-                            const isViewCycle = billDate >= viewCycleStart && billDate < viewCycleEnd;
-                            const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
-                                ? state.customAmounts[instanceId]
-                                : exp.amount;
+                        const isPaid = state.paidBills.includes(instanceId);
+                        const isViewCycle = effectiveDate >= viewCycleStart && effectiveDate < viewCycleEnd;
+                        const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
+                            ? state.customAmounts[instanceId]
+                            : exp.amount;
 
-                            if (isViewCycle) {
-                                totalBillsSum += amount;
-                                if (!isPaid) {
-                                    cycleLiability += amount;
-                                }
-
-                                activeBills.push({
-                                    ...exp,
-                                    amount,
-                                    id: instanceId,
-                                    isBiweekly: false,
-                                    originalDate: billDate,
-                                    isOverdue: billDate <= today && !isPaid
-                                });
-                            } else if (targetOffset === 0 && !isPaid) {
+                        if (isViewCycle) {
+                            totalBillsSum += amount;
+                            if (!isPaid) {
                                 cycleLiability += amount;
-                                activeBills.push({
-                                    ...exp,
-                                    amount,
-                                    id: instanceId,
-                                    isBiweekly: false,
-                                    originalDate: billDate,
-                                    isOverdue: true
-                                });
                             }
+
+                            activeBills.push({
+                                ...exp,
+                                amount,
+                                id: instanceId,
+                                isBiweekly: false,
+                                originalDate: billDate,
+                                isOverdue: effectiveDate <= today && !isPaid
+                            });
+                        } else if (targetOffset === 0 && !isPaid && effectiveDate < viewCycleStart) {
+                            cycleLiability += amount;
+                            activeBills.push({
+                                ...exp,
+                                amount,
+                                id: instanceId,
+                                isBiweekly: false,
+                                originalDate: billDate,
+                                isOverdue: true
+                            });
                         }
                     }
                 });
@@ -969,6 +1026,54 @@
             } else {
                 state.paidBills.push(instanceId);
             }
+            renderCycleHeaders();
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
+        }
+
+        function toggleNewBillDueDay() {
+            const isBiweekly = document.getElementById('new-bill-biweekly').checked;
+            document.getElementById('new-bill-dueday').style.display = isBiweekly ? 'none' : '';
+        }
+
+        function toggleAddBillForm(forceShow) {
+            const form = document.getElementById('add-bill-form');
+            const show = forceShow !== undefined ? forceShow : form.style.display !== 'flex';
+            form.style.display = show ? 'flex' : 'none';
+            if (show) {
+                document.getElementById('new-bill-name').focus();
+            } else {
+                document.getElementById('new-bill-name').value = '';
+                document.getElementById('new-bill-amount').value = '';
+                document.getElementById('new-bill-dueday').value = '';
+                document.getElementById('new-bill-biweekly').checked = false;
+                toggleNewBillDueDay();
+            }
+        }
+
+        function submitNewBill() {
+            const name = document.getElementById('new-bill-name').value.trim();
+            const amount = parseFloat(document.getElementById('new-bill-amount').value);
+            const isBiweekly = document.getElementById('new-bill-biweekly').checked;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('Enter a bill name and a valid amount.');
+                return;
+            }
+
+            if (isBiweekly) {
+                state.biweeklyExpenses.push({ id: `bw_custom_${Date.now()}`, name, amount });
+            } else {
+                const dueDay = parseInt(document.getElementById('new-bill-dueday').value, 10);
+                if (isNaN(dueDay) || dueDay < 1 || dueDay > 31) {
+                    alert('Enter a due day between 1 and 31.');
+                    return;
+                }
+                state.monthlyExpenses.push({ id: `m_custom_${Date.now()}`, name, amount, dueDay });
+            }
+
+            toggleAddBillForm(false);
             renderCycleHeaders();
             recalculateCashFlow();
             saveStateToLocalStorage();
