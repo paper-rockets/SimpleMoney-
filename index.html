@@ -1557,15 +1557,18 @@
             }
         };
 
-        // Load state from Firestore on startup
+        // Load state from Firestore on startup.
+        // Local state (already loaded from localStorage) is the safe fallback.
+        // Remote only wins if it is STRICTLY newer AND has actual content —
+        // empty arrays are truthy in JS, so without this check Firebase can
+        // wipe paid bills / custom amounts with an empty doc on refresh.
         async function loadStateFromFirebase() {
             try {
                 const docRef = doc(db, "users", userId);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const remoteData = docSnap.data();
-                    console.log("Loaded remote state from Firestore:", remoteData);
-                    
+
                     let localData = null;
                     try {
                         const s = localStorage.getItem('simplemoney-state-data');
@@ -1573,48 +1576,53 @@
                     } catch (e) {}
 
                     const remoteTime = parseTimestamp(remoteData.updatedAt);
-                    const localTime = localData ? parseTimestamp(localData.updatedAt) : 0;
+                    const localTime  = localData ? parseTimestamp(localData.updatedAt) : 0;
 
-                    const hasLocalBalance = state.currentBalance !== 0;
-                    const hasRemoteBalance = remoteData.currentBalance !== undefined && remoteData.currentBalance !== 0;
-                    const hasLocalPaidBills = state.paidBills && state.paidBills.length > 0;
-                    const hasRemotePaidBills = remoteData.paidBills && remoteData.paidBills.length > 0;
+                    const remoteHasContent = !!(
+                        (remoteData.currentBalance && remoteData.currentBalance !== 0) ||
+                        (remoteData.paidBills     && remoteData.paidBills.length > 0) ||
+                        (remoteData.deferredBills && remoteData.deferredBills.length > 0) ||
+                        (remoteData.customAmounts && Object.keys(remoteData.customAmounts).length > 0)
+                    );
 
-                    if (localTime > remoteTime || (hasLocalBalance && !hasRemoteBalance) || (hasLocalPaidBills && !hasRemotePaidBills)) {
-                        console.log("Local state is newer or remote is uninitialized. Syncing local to remote...");
-                        if (window.saveStateToFirebase) window.saveStateToFirebase();
-                    } else {
-                        console.log("Remote state is newer/equal. Syncing remote to local...");
+                    if (remoteTime > localTime && remoteHasContent) {
+                        // Remote is strictly newer with real data — pull it down
+                        console.log("Remote newer with content — applying.");
                         if (remoteData.currentBalance !== undefined) {
                             state.currentBalance = remoteData.currentBalance;
                             const balInput = document.getElementById("balance-input");
                             if (balInput) balInput.value = state.currentBalance;
                         }
                         if (remoteData.biweeklyExpenses) state.biweeklyExpenses = remoteData.biweeklyExpenses;
-                        if (remoteData.monthlyExpenses) state.monthlyExpenses = remoteData.monthlyExpenses;
-                        if (remoteData.deferredBills) state.deferredBills = remoteData.deferredBills;
-                        if (remoteData.paidBills) state.paidBills = remoteData.paidBills;
-                        if (remoteData.customAmounts) state.customAmounts = remoteData.customAmounts;
+                        if (remoteData.monthlyExpenses)  state.monthlyExpenses  = remoteData.monthlyExpenses;
+                        if (remoteData.deferredBills)    state.deferredBills    = remoteData.deferredBills;
+                        if (remoteData.paidBills)        state.paidBills        = remoteData.paidBills;
+                        if (remoteData.customAmounts)    state.customAmounts    = remoteData.customAmounts;
 
                         recalculateCashFlow();
                         try {
                             localStorage.setItem('simplemoney-state-data', JSON.stringify({
-                                currentBalance: state.currentBalance,
-                                biweeklyExpenses: state.biweeklyExpenses,
-                                monthlyExpenses: state.monthlyExpenses,
-                                deferredBills: state.deferredBills,
-                                paidBills: state.paidBills,
-                                customAmounts: state.customAmounts || {},
-                                updatedAt: remoteData.updatedAt || new Date().toISOString()
+                                currentBalance:    state.currentBalance,
+                                biweeklyExpenses:  state.biweeklyExpenses,
+                                monthlyExpenses:   state.monthlyExpenses,
+                                deferredBills:     state.deferredBills,
+                                paidBills:         state.paidBills,
+                                customAmounts:     state.customAmounts || {},
+                                updatedAt:         remoteData.updatedAt || new Date().toISOString()
                             }));
                         } catch (err) {}
+                    } else {
+                        // Local is newer or equal — push local up; never overwrite with stale/empty remote
+                        console.log("Local newer or equal — pushing to remote.");
+                        if (window.saveStateToFirebase) window.saveStateToFirebase();
                     }
                 } else {
-                    console.log("No remote Firestore document found. Uploading current local state...");
+                    // No Firebase doc yet — push local state up
                     if (window.saveStateToFirebase) window.saveStateToFirebase();
                 }
             } catch (e) {
-                console.error("Error loading state from Firestore:", e);
+                // Firebase unavailable — local state already loaded, nothing lost
+                console.error("Firebase load error (local state preserved):", e);
             }
         }
 
@@ -1666,8 +1674,7 @@
             }
         };
 
-        // Initialize loading
-        loadStateFromFirebase();
+        // onAuthStateChanged (above) triggers loadStateFromFirebase — no duplicate call needed
     </script>
 </body>
 </html>
