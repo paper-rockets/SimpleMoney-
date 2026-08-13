@@ -938,7 +938,7 @@
                 // Amount: editable in current cycle, read-only static span in previous cycle
                 const amountHtml = isPreviousCycle
                     ? `<span class="bill-amount ${nameClass}">$${Math.round(bill.amount)}</span>`
-                    : `<span class="bill-amount ${nameClass}">$</span><input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" oninput="updateAmount('${bill.id}', this.value)" onchange="updateAmount('${bill.id}', this.value)" step="0.01">`;
+                    : `<span class="bill-amount ${nameClass}">$</span><input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">`;
 
                 row.innerHTML = `
                     <div class="bill-left-col">
