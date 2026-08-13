@@ -762,7 +762,7 @@
             const msPerDay = 1000 * 60 * 60 * 24;
             const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-            const cycles = [0, 1, 2, 3].map(offset => {
+            const cycles = [0, -1].map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(start.getTime() + (14 * msPerDay));
                 const cycleData = getExpensesForViewedCycle(offset);
@@ -772,7 +772,7 @@
 
             const headerHTML = cycles.map(c => {
                 const isSelected = c.offset === state.viewOffset;
-                const title = c.offset === 0 ? "Current cycle" : `Next cycle ${c.offset}`;
+                const title = c.offset === 0 ? "Current cycle" : "Previous cycle";
                 const classNames = `cycle-selector ${isSelected ? 'active' : 'clickable'}`;
 
                 return `<div class="${classNames}" onclick="setViewCycle(${c.offset})" style="display:flex; justify-content:space-between; align-items:center;">
@@ -785,7 +785,7 @@
         }
 
         function setViewCycle(offset) {
-            state.viewOffset = offset;
+            state.viewOffset = (offset === -1 || offset === 0) ? offset : 0;
             renderCycleHeaders();
             recalculateCashFlow();
         }
@@ -900,13 +900,14 @@
 
         function recalculateCashFlow() {
             const cycleData = getExpensesForViewedCycle();
+            const isPreviousCycle = state.viewOffset === -1;
 
             const labelEl = document.getElementById("bills-section-label");
             const totalSumFormatted = Math.round(cycleData.totalBillsSum).toLocaleString();
             if (state.viewOffset === 0) {
                 labelEl.innerText = `Active bills & liabilities ($${totalSumFormatted})`;
             } else {
-                labelEl.innerText = `Upcoming bills (next cycle ${state.viewOffset}) ($${totalSumFormatted})`;
+                labelEl.innerText = `Previous cycle ($${totalSumFormatted})`;
             }
 
             const listEl = document.getElementById("bills-list");
@@ -924,8 +925,8 @@
 
                 const nameClass = isPaid ? 'paid-text' : (isOverdue ? 'overdue-text' : '');
 
-                // If the bill isn't biweekly, generate the push/skip button. Otherwise, leave it blank.
-                const pushAction = bill.isBiweekly ? '' : `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
+                // Push button: not available for biweekly bills or when viewing previous cycle
+                const pushAction = (bill.isBiweekly || isPreviousCycle) ? '' : `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
 
                 let subtitle = '';
                 if (bill.isBiweekly) {
@@ -933,6 +934,11 @@
                 } else if (bill.originalDate) {
                     subtitle = bill.originalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 }
+
+                // Amount: editable in current cycle, read-only static span in previous cycle
+                const amountHtml = isPreviousCycle
+                    ? `<span class="bill-amount ${nameClass}">$${Math.round(bill.amount)}</span>`
+                    : `<span class="bill-amount ${nameClass}">$</span><input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" oninput="updateAmount('${bill.id}', this.value)" onchange="updateAmount('${bill.id}', this.value)" step="0.01">`;
 
                 row.innerHTML = `
                     <div class="bill-left-col">
@@ -943,8 +949,7 @@
                         </div>
                     </div>
                     <div class="bill-right-col">
-                        <span class="bill-amount ${nameClass}">$</span>
-                        <input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" oninput="updateAmount('${bill.id}', this.value)" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                        ${amountHtml}
                         <div class="action-slot">
                             ${pushAction}
                         </div>
@@ -953,7 +958,7 @@
                 listEl.appendChild(row);
             });
 
-            const startingIncome = state.viewOffset === 0 ? state.currentBalance : 1790.00;
+            const startingIncome = state.viewOffset === 0 ? state.currentBalance : 0;
             let disposableLiquidity = startingIncome - cycleData.total;
             let daysDivisor = state.viewOffset === 0 ? state.daysRemaining : 14;
             let safeToSpendDaily = disposableLiquidity / daysDivisor;
@@ -966,17 +971,28 @@
                     balInput.value = state.currentBalance !== 0 ? state.currentBalance : '';
                 } else {
                     balInput.disabled = true;
-                    balInput.placeholder = "Next cycle income ($1,790)";
-                    balInput.value = 1790;
+                    balInput.placeholder = "Previous cycle — read only";
+                    balInput.value = '';
                 }
             }
+
+            // Hide Add Bill form and button when viewing previous cycle
+            const addBillBtn = document.getElementById('add-bill-toggle-btn');
+            const addBillFormEl = document.getElementById('add-bill-form');
+            if (addBillBtn) addBillBtn.style.display = isPreviousCycle ? 'none' : '';
+            if (addBillFormEl && isPreviousCycle) addBillFormEl.style.display = 'none';
 
             const totalSafeEl = document.getElementById("total-safe");
             const safeToSpendEl = document.getElementById("safe-to-spend");
 
             const isCurrentCycleUnset = (state.viewOffset === 0 && (!state.currentBalance || state.currentBalance === 0));
 
-            if (isCurrentCycleUnset) {
+            if (isPreviousCycle) {
+                totalSafeEl.innerText = `BILLS: $${Math.round(cycleData.total)}`;
+                totalSafeEl.style.color = 'var(--text-dim)';
+                safeToSpendEl.innerText = `Previous cycle · read only`;
+                safeToSpendEl.style.color = 'var(--text-dim)';
+            } else if (isCurrentCycleUnset) {
                 totalSafeEl.innerText = "ENTER BANK BALANCE ABOVE";
                 totalSafeEl.style.color = 'var(--text-dim)';
                 safeToSpendEl.innerText = `BILLS DUE: $${Math.round(cycleData.total)}`;
@@ -1092,26 +1108,29 @@
             const msPerDay = 1000 * 60 * 60 * 24;
             const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-            const cyclesSummary = [0, 1, 2, 3].map(offset => {
+            const cyclesSummary = [-1, 0].map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(start.getTime() + (14 * msPerDay));
                 const cycleData = getExpensesForViewedCycle(offset);
-                const startingInc = offset === 0 ? state.currentBalance : 1790.00;
+                const startingInc = offset === 0 ? state.currentBalance : 0;
                 const remaining = startingInc - cycleData.total;
-                const title = offset === 0 ? "Current cycle" : `Next cycle ${offset}`;
+                const title = offset === 0 ? "Current cycle" : "Previous cycle";
                 const billsListStr = cycleData.list.map(b => `${b.name}: $${Math.round(b.amount)}`).join(", ");
-                return `${title} (${formatDate(start)} - ${formatDate(end)}): Income $${Math.round(startingInc)}, Total Bills Due $${Math.round(cycleData.totalBillsSum)}, Remaining Safe Total $${Math.round(remaining)}. Bills: [${billsListStr}]`;
+                const summary = offset === 0
+                    ? `Income $${Math.round(startingInc)}, Total Bills Due $${Math.round(cycleData.totalBillsSum)}, Remaining $${Math.round(remaining)}`
+                    : `Total Bills Due $${Math.round(cycleData.totalBillsSum)} (historical)`;
+                return `${title} (${formatDate(start)} - ${formatDate(end)}): ${summary}. Bills: [${billsListStr}]`;
             }).join('\n');
 
             const financialContext = `
-                User Financial Context (All 4 Cycles Overview):
+                User Financial Context:
                 ${cyclesSummary}
 
-                Currently Viewing: Cycle Offset ${state.viewOffset}
+                Currently Viewing: ${state.viewOffset === 0 ? 'Current cycle' : 'Previous cycle'}
                 Days Remaining in Current Cycle: ${state.daysRemaining}
                 User Financial Query: "${queryText}"
 
-                Instructions: Answer the user's financial question directly, concisely, and accurately based on the full 4-cycle overview provided.
+                Instructions: Answer the user's financial question directly, concisely, and accurately based on the context provided.
             `;
 
             let apiKey = getApiKey();
