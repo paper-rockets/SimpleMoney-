@@ -453,6 +453,12 @@
             opacity: 0.85;
         }
 
+        .push-btn-return {
+            background: #203347;
+            color: #7eb3f7;
+            border: 1px solid #4a90e2;
+        }
+
         .add-bill-btn {
             background: transparent;
             border: 1px dashed var(--border-color);
@@ -797,10 +803,14 @@
             let activeBills = [];
             const msPerDay = 1000 * 60 * 60 * 24;
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const currentCycleStart = state.cycleStart;
+            const currentCycleEnd = state.cycleEnd;
+            const nextCycleStart = state.cycleEnd;
+            const nextCycleEnd = new Date(nextCycleStart.getTime() + (14 * msPerDay));
 
             const viewCycleIndex = state.currentCycleIndex + targetOffset;
-            const viewCycleStart = new Date(state.cycleStart.getTime() + (targetOffset * 14 * msPerDay));
-            const viewCycleEnd = new Date(viewCycleStart.getTime() + (14 * msPerDay));
 
             state.biweeklyExpenses.forEach(exp => {
                 const instanceId = `${exp.id}_cycle_${viewCycleIndex}`;
@@ -817,55 +827,69 @@
             });
 
             let startMonthYear = { m: BASE_PAYDAY.getMonth(), y: BASE_PAYDAY.getFullYear() };
-            let endMonthYear = { m: viewCycleEnd.getMonth(), y: viewCycleEnd.getFullYear() };
+            let endMonthYear = { m: nextCycleEnd.getMonth(), y: nextCycleEnd.getFullYear() };
 
             let currentLoopDate = new Date(startMonthYear.y, startMonthYear.m, 1);
-            let endLoopDate = new Date(endMonthYear.y, endMonthYear.m, 1);
+            let endLoopDate = new Date(endMonthYear.y, endMonthYear.m + 1, 1);
 
-            while (currentLoopDate <= endLoopDate) {
+            while (currentLoopDate < endLoopDate) {
                 const m = currentLoopDate.getMonth();
                 const y = currentLoopDate.getFullYear();
 
                 state.monthlyExpenses.forEach(exp => {
                     let billDate = new Date(y, m, exp.dueDay);
+                    billDate.setHours(0, 0, 0, 0);
 
-                    if (billDate >= BASE_PAYDAY && billDate < viewCycleEnd) {
+                    if (billDate >= BASE_PAYDAY) {
                         const instanceId = `${exp.id}_${y}_${m}`;
-                        const isDeferred = state.deferredBills.includes(instanceId);
-                        // Deferring a bill pushes its effective due date one cycle later
-                        // instead of removing it from the schedule entirely.
-                        const effectiveDate = isDeferred ? new Date(billDate.getTime() + 14 * msPerDay) : billDate;
-
                         const isPaid = state.paidBills.includes(instanceId);
-                        const isViewCycle = effectiveDate >= viewCycleStart && effectiveDate < viewCycleEnd;
+                        const isDeferred = state.deferredBills.includes(instanceId);
                         const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
                             ? state.customAmounts[instanceId]
                             : exp.amount;
 
-                        if (isViewCycle) {
-                            totalBillsSum += amount;
-                            if (!isPaid) {
-                                cycleLiability += amount;
-                            }
+                        const isDueInCurrent = billDate >= currentCycleStart && billDate < currentCycleEnd;
+                        const isOverdue = billDate < currentCycleStart && !isPaid;
+                        const isCurrentCandidate = isDueInCurrent || isOverdue;
+                        const isDueInNext = billDate >= nextCycleStart && billDate < nextCycleEnd;
 
-                            activeBills.push({
-                                ...exp,
-                                amount,
-                                id: instanceId,
-                                isBiweekly: false,
-                                originalDate: billDate,
-                                isOverdue: effectiveDate <= today && !isPaid
-                            });
-                        } else if (targetOffset === 0 && !isPaid && effectiveDate < viewCycleStart) {
-                            cycleLiability += amount;
-                            activeBills.push({
-                                ...exp,
-                                amount,
-                                id: instanceId,
-                                isBiweekly: false,
-                                originalDate: billDate,
-                                isOverdue: true
-                            });
+                        if (targetOffset === 0) {
+                            // Current cycle: shows unpaid overdue bills and current bills that have NOT been pushed
+                            if (isCurrentCandidate && !isDeferred) {
+                                totalBillsSum += amount;
+                                if (!isPaid) {
+                                    cycleLiability += amount;
+                                }
+
+                                activeBills.push({
+                                    ...exp,
+                                    amount,
+                                    id: instanceId,
+                                    isBiweekly: false,
+                                    originalDate: billDate,
+                                    isOverdue: (billDate < today && !isPaid),
+                                    isPushed: false
+                                });
+                            }
+                        } else if (targetOffset === 1) {
+                            // Next cycle: shows bills naturally falling in next cycle PLUS bills pushed forward from current cycle
+                            const isPushedFromCurrent = isCurrentCandidate && isDeferred;
+                            if (isDueInNext || isPushedFromCurrent) {
+                                totalBillsSum += amount;
+                                if (!isPaid) {
+                                    cycleLiability += amount;
+                                }
+
+                                activeBills.push({
+                                    ...exp,
+                                    amount,
+                                    id: instanceId,
+                                    isBiweekly: false,
+                                    originalDate: billDate,
+                                    isOverdue: false,
+                                    isPushed: isPushedFromCurrent
+                                });
+                            }
                         }
                     }
                 });
@@ -925,12 +949,25 @@
 
                 const nameClass = isPaid ? 'paid-text' : (isOverdue ? 'overdue-text' : '');
 
-                // Push button: not for biweekly bills or next cycle view
-                const pushAction = (bill.isBiweekly || isNextCycle) ? '' : `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
+                // Push button:
+                // - Do NOT show for biweekly bills
+                // - Do NOT show for bills that are already paid
+                // - In current cycle: show » (push to next cycle)
+                // - In next cycle: if bill was pushed from current cycle, show « (return to current cycle)
+                let pushAction = '';
+                if (!bill.isBiweekly && !isPaid) {
+                    if (!isNextCycle) {
+                        pushAction = `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
+                    } else if (bill.isPushed) {
+                        pushAction = `<button class="push-btn push-btn-return" onclick="unpushBill('${bill.id}')" title="Move back to current cycle">&laquo;</button>`;
+                    }
+                }
 
                 let subtitle = '';
                 if (bill.isBiweekly) {
                     subtitle = 'Biweekly · Flexible';
+                } else if (bill.isPushed) {
+                    subtitle = `${bill.originalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · Pushed`;
                 } else if (bill.originalDate) {
                     subtitle = bill.originalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 }
@@ -1032,6 +1069,14 @@
                 saveStateToLocalStorage();
                 if (window.saveStateToFirebase) window.saveStateToFirebase();
             }
+        }
+
+        function unpushBill(instanceId) {
+            state.deferredBills = state.deferredBills.filter(id => id !== instanceId);
+            renderCycleHeaders();
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
         }
 
         function togglePaid(instanceId) {
