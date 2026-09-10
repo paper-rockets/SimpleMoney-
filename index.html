@@ -768,7 +768,7 @@
             const msPerDay = 1000 * 60 * 60 * 24;
             const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-            const cycles = [0, 1].map(offset => {
+            const cycles = [0, 1, 2].map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(start.getTime() + (14 * msPerDay));
                 const cycleData = getExpensesForViewedCycle(offset);
@@ -778,7 +778,9 @@
 
             const headerHTML = cycles.map(c => {
                 const isSelected = c.offset === state.viewOffset;
-                const title = c.offset === 0 ? "Current cycle" : "Next cycle";
+                let title = "Current cycle";
+                if (c.offset === 1) title = "Next cycle";
+                else if (c.offset === 2) title = "Following cycle";
                 const classNames = `cycle-selector ${isSelected ? 'active' : 'clickable'}`;
 
                 return `<div class="${classNames}" onclick="setViewCycle(${c.offset})" style="display:flex; justify-content:space-between; align-items:center;">
@@ -791,7 +793,7 @@
         }
 
         function setViewCycle(offset) {
-            state.viewOffset = (offset === 0 || offset === 1) ? offset : 0;
+            state.viewOffset = (offset >= 0 && offset <= 2) ? offset : 0;
             renderCycleHeaders();
             recalculateCashFlow();
         }
@@ -807,8 +809,8 @@
 
             const currentCycleStart = state.cycleStart;
             const currentCycleEnd = state.cycleEnd;
-            const nextCycleStart = state.cycleEnd;
-            const nextCycleEnd = new Date(nextCycleStart.getTime() + (14 * msPerDay));
+            const targetCycleStart = new Date(state.cycleStart.getTime() + (targetOffset * 14 * msPerDay));
+            const targetCycleEnd = new Date(targetCycleStart.getTime() + (14 * msPerDay));
 
             const viewCycleIndex = state.currentCycleIndex + targetOffset;
 
@@ -826,8 +828,9 @@
                 activeBills.push({...exp, amount, id: instanceId, isBiweekly: true});
             });
 
+            const maxForecastEnd = new Date(state.cycleStart.getTime() + (3 * 14 * msPerDay));
             let startMonthYear = { m: BASE_PAYDAY.getMonth(), y: BASE_PAYDAY.getFullYear() };
-            let endMonthYear = { m: nextCycleEnd.getMonth(), y: nextCycleEnd.getFullYear() };
+            let endMonthYear = { m: maxForecastEnd.getMonth(), y: maxForecastEnd.getFullYear() };
 
             let currentLoopDate = new Date(startMonthYear.y, startMonthYear.m, 1);
             let endLoopDate = new Date(endMonthYear.y, endMonthYear.m + 1, 1);
@@ -848,10 +851,10 @@
                             ? state.customAmounts[instanceId]
                             : exp.amount;
 
+                        const isDueInThisCycle = billDate >= targetCycleStart && billDate < targetCycleEnd;
                         const isDueInCurrent = billDate >= currentCycleStart && billDate < currentCycleEnd;
                         const isOverdue = billDate < currentCycleStart && !isPaid;
                         const isCurrentCandidate = isDueInCurrent || isOverdue;
-                        const isDueInNext = billDate >= nextCycleStart && billDate < nextCycleEnd;
 
                         if (targetOffset === 0) {
                             // Current cycle: shows unpaid overdue bills and current bills that have NOT been pushed
@@ -874,7 +877,7 @@
                         } else if (targetOffset === 1) {
                             // Next cycle: shows bills naturally falling in next cycle PLUS bills pushed forward from current cycle
                             const isPushedFromCurrent = isCurrentCandidate && isDeferred;
-                            if (isDueInNext || isPushedFromCurrent) {
+                            if (isDueInThisCycle || isPushedFromCurrent) {
                                 totalBillsSum += amount;
                                 if (!isPaid) {
                                     cycleLiability += amount;
@@ -888,6 +891,24 @@
                                     originalDate: billDate,
                                     isOverdue: false,
                                     isPushed: isPushedFromCurrent
+                                });
+                            }
+                        } else {
+                            // Following cycle (offset 2): shows bills naturally falling in this cycle
+                            if (isDueInThisCycle) {
+                                totalBillsSum += amount;
+                                if (!isPaid) {
+                                    cycleLiability += amount;
+                                }
+
+                                activeBills.push({
+                                    ...exp,
+                                    amount,
+                                    id: instanceId,
+                                    isBiweekly: false,
+                                    originalDate: billDate,
+                                    isOverdue: false,
+                                    isPushed: false
                                 });
                             }
                         }
@@ -924,7 +945,8 @@
 
         function recalculateCashFlow() {
             const cycleData = getExpensesForViewedCycle();
-            const isNextCycle = state.viewOffset === 1;
+            const isUpcoming = state.viewOffset > 0;
+            const cycleTitle = state.viewOffset === 0 ? "Current cycle" : (state.viewOffset === 1 ? "Next cycle" : "Following cycle");
 
             const labelEl = document.getElementById("bills-section-label");
             const totalSumFormatted = Math.round(cycleData.totalBillsSum).toLocaleString();
@@ -956,9 +978,9 @@
                 // - In next cycle: if bill was pushed from current cycle, show « (return to current cycle)
                 let pushAction = '';
                 if (!bill.isBiweekly && !isPaid) {
-                    if (!isNextCycle) {
+                    if (state.viewOffset === 0) {
                         pushAction = `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
-                    } else if (bill.isPushed) {
+                    } else if (state.viewOffset === 1 && bill.isPushed) {
                         pushAction = `<button class="push-btn push-btn-return" onclick="unpushBill('${bill.id}')" title="Move back to current cycle">&laquo;</button>`;
                     }
                 }
@@ -1006,26 +1028,26 @@
                     balInput.value = state.currentBalance !== 0 ? state.currentBalance : '';
                 } else {
                     balInput.disabled = true;
-                    balInput.placeholder = "Next cycle";
+                    balInput.placeholder = cycleTitle;
                     balInput.value = '';
                 }
             }
 
-            // Hide Add Bill form and button when viewing previous cycle
+            // Hide Add Bill form and button when viewing upcoming cycles
             const addBillBtn = document.getElementById('add-bill-toggle-btn');
             const addBillFormEl = document.getElementById('add-bill-form');
-            if (addBillBtn) addBillBtn.style.display = isNextCycle ? 'none' : '';
-            if (addBillFormEl && isNextCycle) addBillFormEl.style.display = 'none';
+            if (addBillBtn) addBillBtn.style.display = isUpcoming ? 'none' : '';
+            if (addBillFormEl && isUpcoming) addBillFormEl.style.display = 'none';
 
             const totalSafeEl = document.getElementById("total-safe");
             const safeToSpendEl = document.getElementById("safe-to-spend");
 
             const isCurrentCycleUnset = (state.viewOffset === 0 && (!state.currentBalance || state.currentBalance === 0));
 
-            if (isNextCycle) {
+            if (isUpcoming) {
                 totalSafeEl.innerText = `UPCOMING: $${Math.round(cycleData.total)}`;
                 totalSafeEl.style.color = 'var(--text-dim)';
-                safeToSpendEl.innerText = `Next cycle`;
+                safeToSpendEl.innerText = cycleTitle;
                 safeToSpendEl.style.color = 'var(--text-dim)';
             } else if (isCurrentCycleUnset) {
                 totalSafeEl.innerText = "ENTER BANK BALANCE ABOVE";
@@ -1151,13 +1173,15 @@
             const msPerDay = 1000 * 60 * 60 * 24;
             const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-            const cyclesSummary = [0, 1].map(offset => {
+            const cyclesSummary = [0, 1, 2].map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(state.cycleStart.getTime() + ((offset + 1) * 14 * msPerDay));
                 const cycleData = getExpensesForViewedCycle(offset);
                 const startingInc = offset === 0 ? state.currentBalance : 0;
                 const remaining = startingInc - cycleData.total;
-                const title = offset === 0 ? "Current cycle" : "Next cycle";
+                let title = "Current cycle";
+                if (offset === 1) title = "Next cycle";
+                else if (offset === 2) title = "Following cycle";
                 const billsListStr = cycleData.list.map(b => `${b.name}: $${Math.round(b.amount)}`).join(", ");
                 const summary = offset === 0
                     ? `Income $${Math.round(startingInc)}, Bills Due $${Math.round(cycleData.totalBillsSum)}, Remaining $${Math.round(remaining)}`
@@ -1169,7 +1193,7 @@
                 User Financial Context:
                 ${cyclesSummary}
 
-                Currently Viewing: ${state.viewOffset === 0 ? 'Current cycle' : 'Next cycle'}
+                Currently Viewing: ${state.viewOffset === 0 ? 'Current cycle' : (state.viewOffset === 1 ? 'Next cycle' : 'Following cycle')}
                 Days Remaining in Current Cycle: ${state.daysRemaining}
                 User Financial Query: "${queryText}"
 
