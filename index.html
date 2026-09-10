@@ -11,15 +11,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b0b0b;
-            --text-main: #E8E8E8;
-            --text-dim: #7a7a7a;
-            --border-color: #2a2a2a;
+            --bg-color: #0b0f14;
+            --surface-card: #151b23;
+            --surface-card-hover: #1a222c;
+            --surface-active: #162232;
+            --text-main: #f0f6fc;
+            --text-dim: #768390;
+            --text-muted: #57606a;
+            --border-color: #212833;
+            --accent-blue: #58a6ff;
             --recording-color: #ff4444;
-            --danger-color: #ff5c5c;
+            --danger-color: #ff7b72;
             --hover-color: #ffffff;
-            --fs-scale: 1.1;
-            --radius: 14px;
+            --fs-scale: 1.05;
+            --radius: 16px;
             --radius-sm: 10px;
         }
 
@@ -142,154 +147,231 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
-            padding: 32px 16px;
+            padding: 16px 16px 95px 16px;
             font-size: calc(16px * var(--fs-scale));
             line-height: 1.4;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
         #app-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 440px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 14px;
         }
 
-        .header-text {
-            margin-bottom: 2px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 14px;
-        }
-
-        .cycle-selector {
-            transition: color 0.2s ease, padding-left 0.2s ease;
-            user-select: none;
-        }
-
-        .cycle-selector.clickable {
-            cursor: pointer;
-            color: var(--text-dim);
-            font-size: 0.78em;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .cycle-selector.clickable:hover {
-            color: var(--hover-color);
-            padding-left: 4px;
-        }
-
-        .cycle-selector.active {
-            color: var(--text-main);
-            font-size: 0.95em;
-            font-weight: 600;
-            margin-bottom: 6px;
-            cursor: default;
-        }
-
-        input[type="number"], textarea {
-            background: color-mix(in srgb, var(--text-main) 5%, transparent);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-family: inherit;
-            font-size: 0.95em;
-            padding: 14px 16px;
-            width: 100%;
-            outline: none;
-            border-radius: var(--radius-sm);
-        }
-
-        input[type="number"]:focus, textarea:focus {
-            border-color: color-mix(in srgb, var(--text-main) 40%, var(--border-color));
-        }
-
-        input[type="number"]::placeholder, textarea::placeholder {
-            color: var(--text-dim);
-        }
-
-        textarea {
-            height: 90px;
-            resize: vertical;
-        }
-
-        .action-row {
+        /* Top Brand Header */
+        .top-brand-bar {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 2px 2px 2px;
         }
 
-        button {
-            background: var(--text-main);
-            color: var(--bg-color);
-            border: none;
-            padding: 12px 18px;
-            font-family: inherit;
-            font-size: 0.85em;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: var(--radius-sm);
-            flex: 1;
-            min-width: 100px;
+        .brand-title {
+            font-size: 0.82em;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: #8b949e;
+            text-transform: uppercase;
         }
 
-        button.secondary {
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-icon-btn {
             background: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: auto !important;
+            flex: none !important;
+            transition: color 0.15s ease;
         }
 
-        button.recording {
-            color: var(--recording-color);
-            border-color: var(--recording-color);
-            animation: pulse 1.5s infinite;
+        .top-icon-btn:hover {
+            color: #ffffff;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        /* Cycle Selector Cards */
+        .cycle-cards-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 2px 8px 2px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
+        .cycle-cards-scroll::-webkit-scrollbar { display: none; }
 
-        button:hover {
-            opacity: 0.85;
-        }
-
-        .metric-container {
-            text-align: center;
-            margin: 6px 0 2px 0;
+        .cycle-card {
+            flex: 1 0 135px;
+            min-width: 135px;
+            background: var(--surface-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cycle-card.active {
+            background: var(--surface-active);
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 1px #58a6ff, 0 4px 14px rgba(88, 166, 255, 0.15);
+        }
+
+        .cycle-card-title {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: #8b949e;
+            margin-bottom: 2px;
+        }
+
+        .cycle-card.active .cycle-card-title {
+            color: #a8c7fa;
+        }
+
+        .cycle-card-dates {
+            font-size: 0.68em;
+            color: #636e7d;
+            margin-bottom: 8px;
+            white-space: nowrap;
+        }
+
+        .cycle-card-amount {
+            font-size: 1.22em;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            padding: 6px 2px 2px 2px;
+            gap: 3px;
+        }
+
+        .hero-label {
+            font-size: 0.72em;
+            font-weight: 700;
+            color: #768390;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .hero-amount {
+            font-size: 3.2em;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            color: #ffffff;
+            line-height: 1.05;
+        }
+
+        .hero-subtext {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #768390;
+            margin-top: 1px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 7px;
+            background: #1f2733;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #79a8d8;
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-stats-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 0.76em;
+            font-weight: 600;
+            color: #768390;
+            margin-top: 5px;
+        }
+
+        /* Balance Card in Current cycle */
+        .balance-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .balance-card-label {
+            font-size: 0.68em;
+            font-weight: 700;
+            color: #768390;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .balance-input-wrap {
+            display: flex;
+            align-items: center;
             gap: 4px;
         }
 
-        #total-safe {
-            font-size: 2.6em;
+        .balance-currency {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: #768390;
+        }
+
+        #balance-input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 1.3em;
             font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
+            padding: 0;
+            outline: none;
+            width: 100%;
+            font-family: inherit;
         }
 
-        #safe-to-spend {
-            font-size: 1em;
-            font-weight: 600;
-            color: var(--text-dim);
-            letter-spacing: 0.3px;
-        }
-
-        .section-label {
-            font-size: 0.75em;
-            font-weight: 600;
-            color: var(--text-dim);
-            padding-bottom: 4px;
-            margin-top: 4px;
-            margin-bottom: 2px;
+        /* Section Headings */
+        .section-group-label {
+            font-size: 0.72em;
+            font-weight: 700;
+            color: #768390;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.12em;
+            margin: 14px 2px 8px 2px;
         }
 
         #bills-list {
@@ -297,36 +379,101 @@
             flex-direction: column;
         }
 
-        .bill-row {
+        /* Bill Card Items */
+        .bill-card-item {
             display: flex;
+            align-items: center;
             justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            margin-bottom: 8px;
+            transition: background 0.15s ease, opacity 0.15s ease;
+        }
+
+        .bill-card-item:hover {
+            background: var(--surface-card-hover);
+        }
+
+        .bill-card-item.paid {
+            opacity: 0.52;
+        }
+
+        .bill-card-item.paid .bill-card-name {
+            text-decoration: line-through;
+            color: var(--text-dim);
+        }
+
+        .bill-card-left {
+            display: flex;
             align-items: center;
             gap: 12px;
-            padding: 14px 2px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .bill-row:last-child {
-            border-bottom: none;
-        }
-
-        .bill-left-col {
-            display: flex;
-            align-items: center;
-            gap: 14px;
             flex: 1;
             min-width: 0;
         }
 
-        .bill-text-col {
+        /* Dot icon for weekly/flexible bills */
+        .category-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 5px;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.12s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .category-dot:active {
+            transform: scale(0.85);
+        }
+
+        /* Date tile for monthly bills */
+        .date-tile {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #1f2733;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.12s ease;
+        }
+        .date-tile:active {
+            transform: scale(0.9);
+        }
+        .date-tile-month {
+            font-size: 0.62em;
+            font-weight: 700;
+            color: #8b949e;
+            text-transform: uppercase;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+        .date-tile-day {
+            font-size: 0.95em;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1;
+        }
+
+        .bill-card-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
             min-width: 0;
         }
 
-        .bill-name {
-            font-size: 0.98em;
+        .bill-card-name {
+            font-size: 0.96em;
             font-weight: 600;
             color: var(--text-main);
             white-space: nowrap;
@@ -334,27 +481,27 @@
             text-overflow: ellipsis;
         }
 
-        .bill-subtitle {
+        .bill-card-subtitle {
             font-size: 0.72em;
             font-weight: 500;
             color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
-        .bill-right-col {
+        .overdue-text { color: var(--danger-color) !important; font-weight: 700 !important; }
+
+        .bill-card-right {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 10px;
+            gap: 8px;
             flex-shrink: 0;
         }
 
-        .bill-amount {
-            font-size: 1em;
+        .bill-card-amount-wrap {
+            display: flex;
+            align-items: center;
+            font-size: 1.02em;
             font-weight: 700;
             color: var(--text-main);
-            flex-shrink: 0;
         }
 
         .bill-amount-input {
@@ -370,6 +517,7 @@
             box-shadow: none !important;
             outline: none !important;
             color: inherit !important;
+            font-family: inherit;
         }
 
         .bill-amount-input::-webkit-outer-spin-button,
@@ -379,53 +527,6 @@
         }
         .bill-amount-input[type=number] {
             -moz-appearance: textfield;
-        }
-
-        .overdue-text { color: var(--danger-color) !important; font-weight: 700 !important; }
-        .overdue-text.bill-subtitle { color: var(--danger-color) !important; opacity: 0.85; }
-
-        .paid-text {
-            text-decoration: line-through;
-            color: var(--text-dim) !important;
-            font-weight: 500 !important;
-        }
-
-        input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: transparent;
-            margin: 0;
-            flex-shrink: 0;
-            color: currentColor;
-            width: 1.35em;
-            height: 1.35em;
-            border: 1.5px solid var(--border-color);
-            border-radius: 6px;
-            display: grid;
-            place-content: center;
-            cursor: pointer;
-        }
-
-        input[type="checkbox"]::before {
-            content: "";
-            width: 0.65em;
-            height: 0.65em;
-            border-radius: 2px;
-            transform: scale(0);
-            transition: 120ms transform ease-in-out;
-            box-shadow: inset 1em 1em var(--text-main);
-        }
-
-        input[type="checkbox"]:checked::before {
-            transform: scale(1);
-        }
-
-        .action-slot {
-            width: 30px;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .push-btn {
@@ -447,8 +548,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.15s ease;
         }
-
         .push-btn:hover {
             opacity: 0.85;
         }
@@ -459,23 +560,211 @@
             border: 1px solid #4a90e2;
         }
 
-        .add-bill-btn {
-            background: transparent;
-            border: 1px dashed var(--border-color);
-            color: var(--text-dim);
-            width: 100%;
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 0.82em;
+        .chevron-icon {
+            color: #57606a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .add-bill-form {
-            display: none;
+        /* Bottom Nav Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: rgba(13, 17, 23, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid #1f2733;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 100;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
+        .nav-tab-btn {
+            background: transparent;
+            border: none;
+            color: #768390;
+            display: flex;
             flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-family: inherit;
+            transition: color 0.15s ease;
+            min-width: auto !important;
+            flex: none !important;
+        }
+
+        .nav-tab-btn.active {
+            color: #ffffff;
+        }
+
+        .nav-tab-btn.active .nav-tab-icon-wrap {
+            background: #1f2733;
+            border-radius: 14px;
+            padding: 4px 14px;
+        }
+
+        .nav-tab-label {
+            font-size: 0.72em;
+            font-weight: 600;
+        }
+
+        .floating-add-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #a8c7fa;
+            color: #0b1320;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(168, 199, 250, 0.28);
+            transition: transform 0.15s ease, background 0.15s ease;
+            flex: none !important;
+            min-width: auto !important;
+        }
+
+        .floating-add-btn:hover {
+            transform: scale(1.06);
+            background: #bdd7ff;
+        }
+
+        /* Modal Overlay & Bottom Sheets */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 200;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-sheet {
+            background: #151b23;
+            border: 1px solid #252e3b;
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 440px;
+            padding: 22px 20px 36px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.22s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #768390;
+            font-size: 1.4em;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            min-width: auto !important;
+            flex: none !important;
+        }
+        .modal-close-btn:hover { color: #ffffff; }
+
+        .modal-sheet input[type="text"],
+        .modal-sheet input[type="number"],
+        .modal-sheet textarea {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95em;
+            padding: 12px 14px;
+            width: 100%;
+            outline: none;
+            border-radius: var(--radius-sm);
+        }
+
+        .modal-sheet textarea {
+            height: 90px;
+            resize: vertical;
+        }
+
+        .action-row {
+            display: flex;
             gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #58a6ff;
+            color: #0b1320;
+            border: none;
+            padding: 12px 18px;
+            font-family: inherit;
+            font-size: 0.88em;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            flex: 1;
+            min-width: 100px;
+            transition: opacity 0.15s ease;
+        }
+
+        button.secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        button.recording {
+            color: var(--recording-color);
+            border-color: var(--recording-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         .add-bill-row {
@@ -504,46 +793,12 @@
             margin-top: 8px;
             font-size: 0.88em;
             line-height: 1.5;
-            background: color-mix(in srgb, var(--text-main) 4%, transparent);
-        }
-
-        /* --- Toggle / expanded panel --- */
-        .toggle-row {
-            display: flex;
-            justify-content: center;
-            margin-top: 8px;
-        }
-
-        .icon-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            outline: none;
-            transition: color 0.2s, transform 0.2s;
-        }
-
-        .icon-btn:hover {
-            color: var(--text-main);
-            transform: scale(1.1);
-        }
-
-        #expanded-panel {
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-            margin-top: 4px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 18px;
+            background: #0d1117;
         }
 
         .settings-row {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             gap: 10px;
         }
@@ -557,7 +812,7 @@
         }
 
         #theme-select {
-            background: transparent;
+            background: #0d1117;
             border: 1px solid var(--border-color);
             color: var(--text-main);
             font-family: inherit;
@@ -568,106 +823,159 @@
             outline: none;
             cursor: pointer;
         }
+
     </style>
 </head>
 <body>
 
     <div id="app-container">
-        <!-- System Status -->
-        <div class="header-text" id="cycle-header">
+        <!-- Top Brand Bar -->
+        <div class="top-brand-bar">
+            <div class="brand-title" style="display: flex; align-items: center; gap: 7px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #58a6ff;"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5a3.5 3.5 0 0 0-7 0c0 2 1.5 3 3.5 3s3.5 1 3.5 3a3.5 3.5 0 0 1-7 0"/></svg>
+                SIMPLE MONEY
+            </div>
+            <div class="top-actions">
+                <button class="top-icon-btn" onclick="toggleOverviewModal(true)" title="Settings & Overview">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Horizontal Scrollable Cycle Cards -->
+        <div class="cycle-cards-scroll" id="cycle-header">
             <!-- Populated via JS -->
         </div>
 
-        <!-- Truth Anchor Input -->
-        <input type="number" id="balance-input" placeholder="Enter current bank balance..." step="0.01">
-
-        <!-- The Primary Metrics -->
-        <div class="metric-container">
-            <div id="total-safe">TOTAL: $0</div>
-            <div id="safe-to-spend">$0 / day</div>
+        <!-- Primary Hero Section -->
+        <div class="hero-section">
+            <div class="hero-label" id="hero-status-label">SAFE TO SPEND</div>
+            <div class="hero-amount" id="hero-amount">$0</div>
+            <div class="hero-subtext" id="hero-subtext">$0 / day</div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-stats-row">
+                <span id="progress-count-label">0 of 0 bills paid</span>
+                <span id="progress-pct-label">0%</span>
+            </div>
         </div>
 
-        <!-- Dynamic Cycle Bills -->
-        <div class="section-label" id="bills-section-label">Active bills & liabilities</div>
+        <!-- Truth Anchor Input / Current Balance Card -->
+        <div class="balance-card" id="balance-card-container">
+            <div class="balance-card-label" id="balance-label-text">Current Bank Balance</div>
+            <div class="balance-input-wrap">
+                <span class="balance-currency" id="balance-currency-symbol">$</span>
+                <input type="number" id="balance-input" placeholder="0.00" step="0.01">
+            </div>
+        </div>
+
+        <!-- Grouped Dynamic Cycle Bills (WEEKLY & UPCOMING) -->
         <div id="bills-list">
             <!-- Populated via JS -->
         </div>
 
-        <button type="button" class="add-bill-btn" id="add-bill-toggle-btn" onclick="toggleAddBillForm()">+ Add bill</button>
-        <div id="add-bill-form" class="add-bill-form">
-            <input type="text" id="new-bill-name" placeholder="Bill name">
-            <div class="add-bill-row">
-                <input type="number" id="new-bill-amount" placeholder="Amount" step="0.01">
-                <input type="number" id="new-bill-dueday" placeholder="Due day (1-31)" min="1" max="31">
-            </div>
-            <label class="add-bill-type-label">
-                <input type="checkbox" id="new-bill-biweekly" onchange="toggleNewBillDueDay()">
-                Biweekly (flexible, every cycle)
-            </label>
-            <div class="action-row">
-                <button type="button" onclick="submitNewBill()">Add bill</button>
-                <button type="button" class="secondary" onclick="toggleAddBillForm(false)">Cancel</button>
-            </div>
-        </div>
-
-        <!-- Toggle Button: reveals Gemini tools + settings -->
-        <div class="toggle-row">
-            <button class="icon-btn" id="settings-toggle-btn" onclick="toggleSettingsMenu()" title="Ask Gemini & settings">
-                <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" style="display: inline-block; transition: transform 0.3s;" id="sparkle-icon">
-                    <path d="M12,2 C12,7.5 16.5,12 22,12 C16.5,12 12,16.5 12,22 C12,16.5 7.5,12 2,12 C7.5,12 12,7.5 12,2 Z M19,13 C19,16 21,18 24,18 C21,18 19,20 19,23 C19,20 17,18 14,18 C17,18 19,16 19,13 Z"/>
-                </svg>
+        <!-- Bottom Navigation Bar -->
+        <div class="bottom-nav-bar">
+            <button class="nav-tab-btn active" id="nav-tab-bills" onclick="switchNavTab('bills')">
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <span class="nav-tab-label">Bills</span>
+            </button>
+            <button class="floating-add-btn" id="floating-add-btn" onclick="toggleAddBillModal(true)" title="Add new bill">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="nav-tab-btn" id="nav-tab-overview" onclick="toggleOverviewModal(true)">
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <span class="nav-tab-label">Overview</span>
             </button>
         </div>
 
-        <!-- Expanded Panel: Gemini interface + Theme & Size Switcher + Auth -->
-        <div id="expanded-panel">
-            <textarea id="gemini-input" placeholder="Ask: can I afford to buy..."></textarea>
-            <div class="action-row">
-                <button onclick="executeLiveTextQuery()">Ask Gemini</button>
-                <button class="secondary" id="voice-btn" onclick="toggleVoiceRecording()">Voice input</button>
-                <button class="secondary" onclick="deleteApiKey()" style="color:var(--danger-color); border-color:rgba(217,83,79,0.3);">Delete Key</button>
+        <!-- Add Bill Modal Bottom Sheet -->
+        <div class="modal-overlay" id="add-bill-modal" onclick="if(event.target===this) toggleAddBillModal(false)">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <span class="modal-title">Add New Bill</span>
+                    <button class="modal-close-btn" onclick="toggleAddBillModal(false)">&times;</button>
+                </div>
+                <input type="text" id="new-bill-name" placeholder="Bill or expense name (e.g. Electric, Groceries)">
+                <div class="add-bill-row">
+                    <input type="number" id="new-bill-amount" placeholder="Amount ($)" step="0.01">
+                    <input type="number" id="new-bill-dueday" placeholder="Due day of month (1-31)" min="1" max="31">
+                </div>
+                <label class="add-bill-type-label">
+                    <input type="checkbox" id="new-bill-biweekly" onchange="toggleNewBillDueDay()">
+                    Biweekly / Flexible (every pay cycle)
+                </label>
+                <div class="action-row" style="margin-top: 8px;">
+                    <button type="button" onclick="submitNewBill()">Add Bill</button>
+                    <button type="button" class="secondary" onclick="toggleAddBillModal(false)">Cancel</button>
+                </div>
             </div>
-            <div id="ai-response-container"></div>
+        </div>
 
+        <!-- Overview / Settings Modal Bottom Sheet -->
+        <div class="modal-overlay" id="overview-modal" onclick="if(event.target===this) toggleOverviewModal(false)">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <span class="modal-title">Overview & Settings</span>
+                    <button class="modal-close-btn" onclick="toggleOverviewModal(false)">&times;</button>
+                </div>
 
-
-            <!-- Auth & Account Section -->
-            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display:flex; flex-direction:column; gap:10px;">
-                <span class="settings-label">Account & Sync</span>
-                <div id="auth-bar" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82em;">
-                    <div id="user-info" style="display: flex; align-items: center; gap: 8px;">
-                        <img id="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; display: none; object-fit: cover;" src="" alt="Avatar">
-                        <span id="user-email" style="color: var(--text-dim); font-weight: 500;">Guest Mode</span>
+                <!-- Gemini AI Assistant -->
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <span class="settings-label">Gemini Financial Assistant</span>
+                    <textarea id="gemini-input" placeholder="Ask: can I afford to buy..."></textarea>
+                    <div class="action-row">
+                        <button onclick="executeLiveTextQuery()">Ask Gemini</button>
+                        <button class="secondary" id="voice-btn" onclick="toggleVoiceRecording()">Voice input</button>
+                        <button class="secondary" onclick="deleteApiKey()" style="color:var(--danger-color); border-color:rgba(217,83,79,0.3);">Delete Key</button>
                     </div>
-                    <button id="auth-action-btn" class="secondary" style="padding: 6px 14px; font-size: 0.82em; min-width: auto; flex: none; display: flex; align-items: center; gap: 6px; border-radius: 8px; font-weight: 600;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0;">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                        </svg>
-                        <span id="auth-btn-text">Sign in with Google</span>
-                    </button>
+                    <div id="ai-response-container"></div>
                 </div>
-            </div>
 
-            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display:flex; flex-direction:column; gap:12px;">
-                <div class="settings-row">
-                    <span class="settings-label">Theme</span>
-                    <select id="theme-select" onchange="changeTheme(this.value)">
-                        <option value="default" style="background: #0b0b0b; color: #E8E8E8;">Default</option>
-                        <option value="minimal-light" style="background: #e4e2dd; color: #1a1a1a;">Minimal Light</option>
-                        <option value="minimal-warm" style="background: #f4f3f0; color: #111111;">Minimal Warm</option>
-                        <option value="minimal-dark" style="background: #1a1a1a; color: #e4e2dd;">Minimal Dark</option>
-                        <option value="minimal-oled" style="background: #000000; color: #ffffff;">Minimal OLED</option>
-                    </select>
+                <!-- Account & Sync -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display:flex; flex-direction:column; gap:10px;">
+                    <span class="settings-label">Account & Sync</span>
+                    <div id="auth-bar" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82em;">
+                        <div id="user-info" style="display: flex; align-items: center; gap: 8px;">
+                            <img id="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; display: none; object-fit: cover;" src="" alt="Avatar">
+                            <span id="user-email" style="color: var(--text-dim); font-weight: 500;">Guest Mode</span>
+                        </div>
+                        <button id="auth-action-btn" class="secondary" style="padding: 6px 14px; font-size: 0.82em; min-width: auto; flex: none; display: flex; align-items: center; gap: 6px; border-radius: 8px; font-weight: 600;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0;">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                            </svg>
+                            <span id="auth-btn-text">Sign in with Google</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="settings-row">
-                    <span class="settings-label">Size</span>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="size-btn" onclick="changeSize('normal')" id="btn-size-normal">Normal</button>
-                        <button class="size-btn" onclick="changeSize('large')" id="btn-size-large">Large</button>
-                        <button class="size-btn" onclick="changeSize('huge')" id="btn-size-huge">Huge</button>
+
+                <!-- Appearance -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display:flex; flex-direction:column; gap:12px;">
+                    <div class="settings-row">
+                        <span class="settings-label">Theme</span>
+                        <select id="theme-select" onchange="changeTheme(this.value)">
+                            <option value="default" style="background: #0b0b0b; color: #E8E8E8;">Default</option>
+                            <option value="minimal-light" style="background: #e4e2dd; color: #1a1a1a;">Minimal Light</option>
+                            <option value="minimal-warm" style="background: #f4f3f0; color: #111111;">Minimal Warm</option>
+                            <option value="minimal-dark" style="background: #1a1a1a; color: #e4e2dd;">Minimal Dark</option>
+                            <option value="minimal-oled" style="background: #000000; color: #ffffff;">Minimal OLED</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">Size</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="size-btn" onclick="changeSize('normal')" id="btn-size-normal">Normal</button>
+                            <button class="size-btn" onclick="changeSize('large')" id="btn-size-large">Large</button>
+                            <button class="size-btn" onclick="changeSize('huge')" id="btn-size-huge">Huge</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -771,9 +1079,10 @@
             const cycles = [0, 1, 2].map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(start.getTime() + (14 * msPerDay));
+                const inclusiveEnd = new Date(start.getTime() + (13 * msPerDay));
                 const cycleData = getExpensesForViewedCycle(offset);
                 const sum = Math.round(cycleData.totalBillsSum);
-                return { offset, start, end, sum };
+                return { offset, start, end, inclusiveEnd, sum };
             });
 
             const headerHTML = cycles.map(c => {
@@ -781,15 +1090,18 @@
                 let title = "Current cycle";
                 if (c.offset === 1) title = "Next cycle";
                 else if (c.offset === 2) title = "Following cycle";
-                const classNames = `cycle-selector ${isSelected ? 'active' : 'clickable'}`;
 
-                return `<div class="${classNames}" onclick="setViewCycle(${c.offset})" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>${title}: ${formatDate(c.start)} – ${formatDate(c.end)}</span>
-                    <span style="font-weight:700; opacity:0.9;">Bills: $${c.sum.toLocaleString()}</span>
-                </div>`;
+                return `
+                    <div class="cycle-card ${isSelected ? 'active' : ''}" onclick="setViewCycle(${c.offset})">
+                        <div class="cycle-card-title">${title}</div>
+                        <div class="cycle-card-dates">${formatDate(c.start)} – ${formatDate(c.inclusiveEnd)}</div>
+                        <div class="cycle-card-amount">$${c.sum.toLocaleString()}</div>
+                    </div>
+                `;
             }).join('');
 
-            document.getElementById("cycle-header").innerHTML = headerHTML;
+            const headerEl = document.getElementById("cycle-header");
+            if (headerEl) headerEl.innerHTML = headerHTML;
         }
 
         function setViewCycle(offset) {
@@ -948,126 +1260,185 @@
             const isUpcoming = state.viewOffset > 0;
             const cycleTitle = state.viewOffset === 0 ? "Current cycle" : (state.viewOffset === 1 ? "Next cycle" : "Following cycle");
 
-            const labelEl = document.getElementById("bills-section-label");
-            const totalSumFormatted = Math.round(cycleData.totalBillsSum).toLocaleString();
-            if (state.viewOffset === 0) {
-                labelEl.innerText = `Active bills & liabilities ($${totalSumFormatted})`;
-            } else {
-                labelEl.innerText = `Upcoming bills ($${totalSumFormatted})`;
-            }
+            // 1. Progress Bar & Bill Counts
+            const totalCount = cycleData.list.length;
+            const paidCount = cycleData.list.filter(b => state.paidBills.includes(b.id)).length;
+            const pct = totalCount > 0 ? Math.round((paidCount / totalCount) * 100) : 0;
 
-            const listEl = document.getElementById("bills-list");
-            listEl.innerHTML = '';
+            const progressFillEl = document.getElementById("progress-fill");
+            const progressCountEl = document.getElementById("progress-count-label");
+            const progressPctEl = document.getElementById("progress-pct-label");
+            if (progressFillEl) progressFillEl.style.width = `${pct}%`;
+            if (progressCountEl) progressCountEl.innerText = `${paidCount} of ${totalCount} bills paid`;
+            if (progressPctEl) progressPctEl.innerText = `${pct}%`;
 
-            if (cycleData.list.length === 0) {
-                listEl.innerHTML = '<div class="bill-row" style="color:var(--text-dim); justify-content:center;">No upcoming bills</div>';
-            }
-
-            cycleData.list.forEach(bill => {
-                const isPaid = state.paidBills.includes(bill.id);
-                const isOverdue = !!bill.isOverdue;
-                const row = document.createElement('div');
-                row.className = 'bill-row';
-
-                const nameClass = isPaid ? 'paid-text' : (isOverdue ? 'overdue-text' : '');
-
-                // Push button:
-                // - Do NOT show for biweekly bills
-                // - Do NOT show for bills that are already paid
-                // - In current cycle: show » (push to next cycle)
-                // - In next cycle: if bill was pushed from current cycle, show « (return to current cycle)
-                let pushAction = '';
-                if (!bill.isBiweekly && !isPaid) {
-                    if (state.viewOffset === 0) {
-                        pushAction = `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
-                    } else if (state.viewOffset === 1 && bill.isPushed) {
-                        pushAction = `<button class="push-btn push-btn-return" onclick="unpushBill('${bill.id}')" title="Move back to current cycle">&laquo;</button>`;
-                    }
-                }
-
-                let subtitle = '';
-                if (bill.isBiweekly) {
-                    subtitle = 'Biweekly · Flexible';
-                } else if (bill.isPushed) {
-                    subtitle = `${bill.originalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · Pushed`;
-                } else if (bill.originalDate) {
-                    subtitle = bill.originalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                }
-
-                // Amount: always editable (next cycle editing useful for pre-planning)
-                const amountHtml = `<span class="bill-amount ${nameClass}">$</span><input type="number" class="bill-amount-input bill-amount ${nameClass}" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">`;
-
-                row.innerHTML = `
-                    <div class="bill-left-col">
-                        <input type="checkbox" ${isPaid ? 'checked' : ''} onchange="togglePaid('${bill.id}')">
-                        <div class="bill-text-col">
-                            <span class="bill-name ${nameClass}">${bill.name}</span>
-                            ${subtitle ? `<span class="bill-subtitle ${nameClass}">${subtitle}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="bill-right-col">
-                        ${amountHtml}
-                        <div class="action-slot">
-                            ${pushAction}
-                        </div>
-                    </div>
-                `;
-                listEl.appendChild(row);
-            });
-
+            // 2. Financial Metrics & Hero Section
             const startingIncome = state.viewOffset === 0 ? state.currentBalance : 0;
             let disposableLiquidity = startingIncome - cycleData.total;
             let daysDivisor = state.viewOffset === 0 ? state.daysRemaining : 14;
             let safeToSpendDaily = disposableLiquidity / daysDivisor;
 
+            const heroStatusEl = document.getElementById("hero-status-label");
+            const heroAmountEl = document.getElementById("hero-amount");
+            const heroSubtextEl = document.getElementById("hero-subtext");
+            const balContainer = document.getElementById("balance-card-container");
             const balInput = document.getElementById("balance-input");
-            if (balInput) {
-                if (state.viewOffset === 0) {
+
+            if (isUpcoming) {
+                if (heroStatusEl) heroStatusEl.innerText = "UPCOMING BILLS";
+                if (heroAmountEl) {
+                    heroAmountEl.innerText = `$${Math.round(cycleData.total).toLocaleString()}`;
+                    heroAmountEl.style.color = "#ffffff";
+                }
+                if (heroSubtextEl) heroSubtextEl.innerText = `${cycleTitle} · Total bills: $${Math.round(cycleData.totalBillsSum).toLocaleString()}`;
+                if (balContainer) balContainer.style.display = "none";
+            } else {
+                if (balContainer) balContainer.style.display = "flex";
+                if (balInput) {
                     balInput.disabled = false;
-                    balInput.placeholder = "Enter current bank balance...";
                     balInput.value = state.currentBalance !== 0 ? state.currentBalance : '';
+                }
+
+                if (!state.currentBalance || state.currentBalance === 0) {
+                    if (heroStatusEl) heroStatusEl.innerText = "CYCLE TOTAL";
+                    if (heroAmountEl) {
+                        heroAmountEl.innerText = `$${Math.round(cycleData.total).toLocaleString()}`;
+                        heroAmountEl.style.color = "#ffffff";
+                    }
+                    if (heroSubtextEl) heroSubtextEl.innerText = "Enter balance to calculate daily safe spend";
+                } else if (disposableLiquidity < 0) {
+                    if (heroStatusEl) heroStatusEl.innerText = "SHORTFALL";
+                    if (heroAmountEl) {
+                        heroAmountEl.innerText = `-$${Math.abs(Math.round(disposableLiquidity)).toLocaleString()}`;
+                        heroAmountEl.style.color = "var(--danger-color)";
+                    }
+                    if (heroSubtextEl) heroSubtextEl.innerText = "Deficit: liabilities exceed current balance";
                 } else {
-                    balInput.disabled = true;
-                    balInput.placeholder = cycleTitle;
-                    balInput.value = '';
+                    if (heroStatusEl) heroStatusEl.innerText = "SAFE TO SPEND";
+                    if (heroAmountEl) {
+                        heroAmountEl.innerText = `$${Math.round(disposableLiquidity).toLocaleString()}`;
+                        heroAmountEl.style.color = "#ffffff";
+                    }
+                    if (heroSubtextEl) heroSubtextEl.innerText = `$${Math.round(safeToSpendDaily).toLocaleString()} / day · ${state.daysRemaining} days left`;
                 }
             }
 
-            // Hide Add Bill form and button when viewing upcoming cycles
-            const addBillBtn = document.getElementById('add-bill-toggle-btn');
-            const addBillFormEl = document.getElementById('add-bill-form');
-            if (addBillBtn) addBillBtn.style.display = isUpcoming ? 'none' : '';
-            if (addBillFormEl && isUpcoming) addBillFormEl.style.display = 'none';
+            // 3. Render Categorized Card-based Bills (WEEKLY & UPCOMING)
+            const listEl = document.getElementById("bills-list");
+            listEl.innerHTML = '';
 
-            const totalSafeEl = document.getElementById("total-safe");
-            const safeToSpendEl = document.getElementById("safe-to-spend");
+            if (cycleData.list.length === 0) {
+                listEl.innerHTML = '<div class="bill-card-item" style="color:var(--text-dim); justify-content:center; padding:18px;">No bills in this cycle</div>';
+                return;
+            }
 
-            const isCurrentCycleUnset = (state.viewOffset === 0 && (!state.currentBalance || state.currentBalance === 0));
+            const weeklyBills = cycleData.list.filter(b => b.isBiweekly);
+            const upcomingBills = cycleData.list.filter(b => !b.isBiweekly);
 
-            if (isUpcoming) {
-                totalSafeEl.innerText = `UPCOMING: $${Math.round(cycleData.total)}`;
-                totalSafeEl.style.color = 'var(--text-dim)';
-                safeToSpendEl.innerText = cycleTitle;
-                safeToSpendEl.style.color = 'var(--text-dim)';
-            } else if (isCurrentCycleUnset) {
-                totalSafeEl.innerText = "ENTER BANK BALANCE ABOVE";
-                totalSafeEl.style.color = 'var(--text-dim)';
-                safeToSpendEl.innerText = `BILLS DUE: $${Math.round(cycleData.total)}`;
-                safeToSpendEl.style.color = 'var(--text-dim)';
-            } else if (disposableLiquidity < 0) {
-                totalSafeEl.innerText = `WARNING: -$${Math.abs(Math.round(disposableLiquidity))}`;
-                totalSafeEl.style.color = 'var(--danger-color)';
-                safeToSpendEl.innerText = `SHORTFALL`;
-                safeToSpendEl.style.color = 'var(--danger-color)';
-            } else {
-                totalSafeEl.innerText = `TOTAL: $${Math.round(disposableLiquidity)}`;
-                totalSafeEl.style.color = '';
-                safeToSpendEl.innerText = `$${Math.round(safeToSpendDaily)} / day`;
-                safeToSpendEl.style.color = '';
+            const getDotColor = (name) => {
+                const lower = name.toLowerCase();
+                if (lower.includes('groc')) return '#3fb950'; // green
+                if (lower.includes('beer') || lower.includes('alcohol')) return '#d29922'; // amber
+                if (lower.includes('buffer')) return '#8b949e'; // muted gray
+                if (lower.includes('gas') || lower.includes('fuel')) return '#f0883e'; // orange
+                return '#58a6ff'; // accent blue
+            };
+
+            // Group 1: WEEKLY (Biweekly flexible bills)
+            if (weeklyBills.length > 0) {
+                const weeklyHeader = document.createElement('div');
+                weeklyHeader.className = 'section-group-label';
+                weeklyHeader.innerText = 'Weekly';
+                listEl.appendChild(weeklyHeader);
+
+                weeklyBills.forEach(bill => {
+                    const isPaid = state.paidBills.includes(bill.id);
+                    const card = document.createElement('div');
+                    card.className = `bill-card-item ${isPaid ? 'paid' : ''}`;
+
+                    const dotColor = getDotColor(bill.name);
+                    const checkMark = isPaid ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : '';
+
+                    card.innerHTML = `
+                        <div class="bill-card-left">
+                            <div class="category-dot" style="background:${dotColor};" onclick="togglePaid('${bill.id}')" title="Click to mark as paid">
+                                ${checkMark}
+                            </div>
+                            <div class="bill-card-info" onclick="togglePaid('${bill.id}')" style="cursor:pointer;">
+                                <div class="bill-card-name">${bill.name}</div>
+                                <div class="bill-card-subtitle">Biweekly · Flexible</div>
+                            </div>
+                        </div>
+                        <div class="bill-card-right">
+                            <div class="bill-card-amount-wrap">
+                                <span>$</span>
+                                <input type="number" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                            </div>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+            }
+
+            // Group 2: UPCOMING (Monthly scheduled bills with calendar date tiles)
+            if (upcomingBills.length > 0) {
+                const upcomingHeader = document.createElement('div');
+                upcomingHeader.className = 'section-group-label';
+                upcomingHeader.innerText = 'Upcoming';
+                listEl.appendChild(upcomingHeader);
+
+                upcomingBills.forEach(bill => {
+                    const isPaid = state.paidBills.includes(bill.id);
+                    const isOverdue = !!bill.isOverdue;
+                    const card = document.createElement('div');
+                    card.className = `bill-card-item ${isPaid ? 'paid' : ''}`;
+
+                    const billDate = bill.originalDate || new Date();
+                    const monthStr = billDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+                    const dayStr = billDate.getDate();
+
+                    let subtitle = `Due ${monthStr} ${dayStr}`;
+                    if (bill.isPushed) subtitle = `${monthStr} ${dayStr} · Pushed`;
+                    if (isOverdue) subtitle = `Overdue · Due ${monthStr} ${dayStr}`;
+
+                    // Push / Return Button
+                    let pushAction = '';
+                    if (!isPaid) {
+                        if (state.viewOffset === 0) {
+                            pushAction = `<button class="push-btn" onclick="pushBill('${bill.id}')" title="Push to next cycle">&raquo;</button>`;
+                        } else if (state.viewOffset === 1 && bill.isPushed) {
+                            pushAction = `<button class="push-btn push-btn-return" onclick="unpushBill('${bill.id}')" title="Move back to current cycle">&laquo;</button>`;
+                        }
+                    }
+
+                    const checkOverlay = isPaid ? `<div style="position:absolute; width:100%; height:100%; background:rgba(46,160,67,0.85); border-radius:10px; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
+
+                    card.innerHTML = `
+                        <div class="bill-card-left">
+                            <div class="date-tile" style="position:relative;" onclick="togglePaid('${bill.id}')" title="Click to mark as paid">
+                                ${checkOverlay}
+                                <span class="date-tile-month">${monthStr}</span>
+                                <span class="date-tile-day">${dayStr}</span>
+                            </div>
+                            <div class="bill-card-info" onclick="togglePaid('${bill.id}')" style="cursor:pointer;">
+                                <div class="bill-card-name ${isOverdue ? 'overdue-text' : ''}">${bill.name}</div>
+                                <div class="bill-card-subtitle ${isOverdue ? 'overdue-text' : ''}">${subtitle}</div>
+                            </div>
+                        </div>
+                        <div class="bill-card-right">
+                            <div class="bill-card-amount-wrap">
+                                <span>$</span>
+                                <input type="number" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                            </div>
+                            ${pushAction}
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
             }
         }
 
-        // --- 5. INTERACTIONS ---
+        // --- 5. INTERACTIONS & MODALS ---
         const balInput = document.getElementById("balance-input");
         const handleBalanceInput = (e) => {
             if (state.viewOffset !== 0) return;
@@ -1118,19 +1489,58 @@
             document.getElementById('new-bill-dueday').style.display = isBiweekly ? 'none' : '';
         }
 
-        function toggleAddBillForm(forceShow) {
-            const form = document.getElementById('add-bill-form');
-            const show = forceShow !== undefined ? forceShow : form.style.display !== 'flex';
-            form.style.display = show ? 'flex' : 'none';
-            if (show) {
-                document.getElementById('new-bill-name').focus();
+        function toggleAddBillModal(show) {
+            const modal = document.getElementById('add-bill-modal');
+            if (!modal) return;
+            const isShown = show !== undefined ? show : !modal.classList.contains('open');
+            if (isShown) {
+                modal.classList.add('open');
+                setTimeout(() => {
+                    const input = document.getElementById('new-bill-name');
+                    if (input) input.focus();
+                }, 80);
             } else {
+                modal.classList.remove('open');
                 document.getElementById('new-bill-name').value = '';
                 document.getElementById('new-bill-amount').value = '';
                 document.getElementById('new-bill-dueday').value = '';
                 document.getElementById('new-bill-biweekly').checked = false;
                 toggleNewBillDueDay();
             }
+        }
+
+        function toggleOverviewModal(show) {
+            const modal = document.getElementById('overview-modal');
+            const billsTab = document.getElementById('nav-tab-bills');
+            const overviewTab = document.getElementById('nav-tab-overview');
+            if (!modal) return;
+            const isShown = show !== undefined ? show : !modal.classList.contains('open');
+            if (isShown) {
+                modal.classList.add('open');
+                if (billsTab) billsTab.classList.remove('active');
+                if (overviewTab) overviewTab.classList.add('active');
+            } else {
+                modal.classList.remove('open');
+                if (billsTab) billsTab.classList.add('active');
+                if (overviewTab) overviewTab.classList.remove('active');
+            }
+        }
+
+        function switchNavTab(tab) {
+            if (tab === 'bills') {
+                toggleOverviewModal(false);
+            } else if (tab === 'overview') {
+                toggleOverviewModal(true);
+            }
+        }
+
+        // Backward-compatibility wrappers
+        function toggleAddBillForm(forceShow) {
+            toggleAddBillModal(forceShow);
+        }
+
+        function toggleSettingsMenu(forceShow) {
+            toggleOverviewModal(forceShow);
         }
 
         function submitNewBill() {
@@ -1154,7 +1564,7 @@
                 state.monthlyExpenses.push({ id: `m_custom_${Date.now()}`, name, amount, dueDay });
             }
 
-            toggleAddBillForm(false);
+            toggleAddBillModal(false);
             renderCycleHeaders();
             recalculateCashFlow();
             saveStateToLocalStorage();
