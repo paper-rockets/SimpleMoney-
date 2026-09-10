@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simplemoney-v2';
+const CACHE_NAME = 'simplemoney-v3';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
@@ -31,6 +31,8 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -43,6 +45,11 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) return cachedResponse;
+        if (event.request.mode === 'navigate') return caches.match('./');
+        return Response.error();
+      })
   );
 });
