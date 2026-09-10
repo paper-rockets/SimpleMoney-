@@ -151,7 +151,7 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            padding: 16px 16px 95px 16px;
+            padding: 16px 16px 115px 16px;
             font-size: calc(16px * var(--fs-scale));
             line-height: 1.4;
             -webkit-font-smoothing: antialiased;
@@ -574,7 +574,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 72px;
+            min-height: 70px;
             background: rgba(13, 17, 23, 0.96);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -582,10 +582,70 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding: 0 16px;
+            padding: 6px 16px;
+            padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
             z-index: 100;
             max-width: 440px;
             margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .master-bill-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            gap: 8px;
+        }
+
+        .master-bill-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .master-bill-name {
+            font-size: 0.92em;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .master-bill-meta {
+            font-size: 0.72em;
+            color: var(--text-dim);
+        }
+
+        .master-bill-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-bill-btn {
+            background: transparent;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.15s ease;
+            min-width: auto !important;
+            flex: none !important;
+        }
+
+        .delete-bill-btn:hover {
+            background: rgba(248, 81, 73, 0.15);
         }
 
         .nav-tab-btn {
@@ -978,6 +1038,23 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Master Recurring Bills Modal Bottom Sheet -->
+        <div class="modal-overlay" id="master-bills-modal" onclick="if(event.target===this) toggleMasterBillsModal(false)">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <span class="modal-title">All Master Bills</span>
+                    <button class="modal-close-btn" onclick="toggleMasterBillsModal(false)">&times;</button>
+                </div>
+                <div style="font-size: 0.78em; color: var(--text-dim); margin-top: -6px;">
+                    Your recurring bills and liabilities that automatically populate each cycle:
+                </div>
+                <div id="master-bills-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto;">
+                    <!-- Populated via JS -->
+                </div>
+                <button type="button" onclick="toggleMasterBillsModal(false); toggleAddBillModal(true);" style="margin-top: 6px;">+ Add New Master Bill</button>
             </div>
         </div>
     </div>
@@ -1524,6 +1601,8 @@
             if (!modal) return;
             const isShown = show !== undefined ? show : !modal.classList.contains('open');
             if (isShown) {
+                toggleMasterBillsModal(false);
+                toggleOverviewModal(false);
                 modal.classList.add('open');
                 setTimeout(() => {
                     const input = document.getElementById('new-bill-name');
@@ -1546,6 +1625,8 @@
             if (!modal) return;
             const isShown = show !== undefined ? show : !modal.classList.contains('open');
             if (isShown) {
+                toggleMasterBillsModal(false);
+                toggleAddBillModal(false);
                 modal.classList.add('open');
                 if (billsTab) billsTab.classList.remove('active');
                 if (overviewTab) overviewTab.classList.add('active');
@@ -1556,9 +1637,128 @@
             }
         }
 
+        function toggleMasterBillsModal(show) {
+            const modal = document.getElementById('master-bills-modal');
+            const billsTab = document.getElementById('nav-tab-bills');
+            const overviewTab = document.getElementById('nav-tab-overview');
+            if (!modal) return;
+            const isShown = show !== undefined ? show : !modal.classList.contains('open');
+            if (isShown) {
+                toggleOverviewModal(false);
+                toggleAddBillModal(false);
+                renderMasterBillsList();
+                modal.classList.add('open');
+                if (billsTab) billsTab.classList.add('active');
+                if (overviewTab) overviewTab.classList.remove('active');
+            } else {
+                modal.classList.remove('open');
+            }
+        }
+
+        function renderMasterBillsList() {
+            const container = document.getElementById('master-bills-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // 1. Biweekly recurring bills
+            const bwHeader = document.createElement('div');
+            bwHeader.className = 'section-group-label';
+            bwHeader.style.margin = '4px 0 2px 0';
+            bwHeader.innerText = 'Biweekly Recurring (Every Cycle)';
+            container.appendChild(bwHeader);
+
+            if (state.biweeklyExpenses.length === 0) {
+                container.innerHTML += '<div style="font-size:0.8em; color:var(--text-dim); padding:6px 2px;">No biweekly bills</div>';
+            } else {
+                state.biweeklyExpenses.forEach(bill => {
+                    const row = document.createElement('div');
+                    row.className = 'master-bill-row';
+                    row.innerHTML = `
+                        <div class="master-bill-info">
+                            <span class="master-bill-name">${bill.name}</span>
+                            <span class="master-bill-meta">Flexible · Every cycle</span>
+                        </div>
+                        <div class="master-bill-right">
+                            <div class="bill-card-amount-wrap">
+                                <span>$</span>
+                                <input type="number" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateMasterBillAmount('biweekly', '${bill.id}', this.value)" step="0.01">
+                            </div>
+                            <button class="delete-bill-btn" onclick="deleteRecurringBill('biweekly', '${bill.id}')" title="Delete bill">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            // 2. Monthly scheduled bills
+            const mHeader = document.createElement('div');
+            mHeader.className = 'section-group-label';
+            mHeader.style.margin = '10px 0 2px 0';
+            mHeader.innerText = 'Monthly Scheduled';
+            container.appendChild(mHeader);
+
+            if (state.monthlyExpenses.length === 0) {
+                container.innerHTML += '<div style="font-size:0.8em; color:var(--text-dim); padding:6px 2px;">No monthly bills</div>';
+            } else {
+                const sortedMonthly = [...state.monthlyExpenses].sort((a, b) => (a.dueDay || 0) - (b.dueDay || 0));
+                sortedMonthly.forEach(bill => {
+                    const row = document.createElement('div');
+                    row.className = 'master-bill-row';
+                    row.innerHTML = `
+                        <div class="master-bill-info">
+                            <span class="master-bill-name">${bill.name}</span>
+                            <span class="master-bill-meta">Due Day: ${bill.dueDay}</span>
+                        </div>
+                        <div class="master-bill-right">
+                            <div class="bill-card-amount-wrap">
+                                <span>$</span>
+                                <input type="number" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateMasterBillAmount('monthly', '${bill.id}', this.value)" step="0.01">
+                            </div>
+                            <button class="delete-bill-btn" onclick="deleteRecurringBill('monthly', '${bill.id}')" title="Delete bill">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+        }
+
+        function updateMasterBillAmount(type, id, val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return;
+            if (type === 'biweekly') {
+                const item = state.biweeklyExpenses.find(b => b.id === id);
+                if (item) item.amount = num;
+            } else {
+                const item = state.monthlyExpenses.find(b => b.id === id);
+                if (item) item.amount = num;
+            }
+            renderCycleHeaders();
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
+        }
+
+        function deleteRecurringBill(type, id) {
+            if (!confirm("Delete this recurring bill?")) return;
+            if (type === 'biweekly') {
+                state.biweeklyExpenses = state.biweeklyExpenses.filter(b => b.id !== id);
+            } else {
+                state.monthlyExpenses = state.monthlyExpenses.filter(b => b.id !== id);
+            }
+            renderMasterBillsList();
+            renderCycleHeaders();
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
+        }
+
         function switchNavTab(tab) {
             if (tab === 'bills') {
-                toggleOverviewModal(false);
+                toggleMasterBillsModal();
             } else if (tab === 'overview') {
                 toggleOverviewModal(true);
             }
