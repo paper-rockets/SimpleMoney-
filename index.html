@@ -1332,8 +1332,25 @@
                 return;
             }
 
-            const weeklyBills = cycleData.list.filter(b => b.isBiweekly);
-            const upcomingBills = cycleData.list.filter(b => !b.isBiweekly);
+            const unpaidWeekly = cycleData.list.filter(b => b.isBiweekly && !state.paidBills.includes(b.id));
+            const unpaidUpcoming = cycleData.list.filter(b => !b.isBiweekly && !state.paidBills.includes(b.id));
+            const paidBills = cycleData.list.filter(b => state.paidBills.includes(b.id));
+
+            // Sort unpaid upcoming: overdue first, then earliest due date
+            unpaidUpcoming.sort((a, b) => {
+                if (a.isOverdue && !b.isOverdue) return -1;
+                if (!a.isOverdue && b.isOverdue) return 1;
+                if (a.originalDate && b.originalDate) return a.originalDate - b.originalDate;
+                return 0;
+            });
+
+            // Sort paid bills: biweekly first, then by date
+            paidBills.sort((a, b) => {
+                if (a.isBiweekly && !b.isBiweekly) return -1;
+                if (!a.isBiweekly && b.isBiweekly) return 1;
+                if (a.originalDate && b.originalDate) return a.originalDate - b.originalDate;
+                return 0;
+            });
 
             const getDotColor = (name) => {
                 const lower = name.toLowerCase();
@@ -1344,24 +1361,16 @@
                 return '#58a6ff'; // accent blue
             };
 
-            // Group 1: WEEKLY (Biweekly flexible bills)
-            if (weeklyBills.length > 0) {
-                const weeklyHeader = document.createElement('div');
-                weeklyHeader.className = 'section-group-label';
-                weeklyHeader.innerText = 'Weekly';
-                listEl.appendChild(weeklyHeader);
+            const renderBillCard = (bill, isPaid) => {
+                const card = document.createElement('div');
+                card.className = `bill-card-item ${isPaid ? 'paid' : ''}`;
 
-                weeklyBills.forEach(bill => {
-                    const isPaid = state.paidBills.includes(bill.id);
-                    const card = document.createElement('div');
-                    card.className = `bill-card-item ${isPaid ? 'paid' : ''}`;
-
+                if (bill.isBiweekly) {
                     const dotColor = getDotColor(bill.name);
                     const checkMark = isPaid ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : '';
-
                     card.innerHTML = `
                         <div class="bill-card-left">
-                            <div class="category-dot" style="background:${dotColor};" onclick="togglePaid('${bill.id}')" title="Click to mark as paid">
+                            <div class="category-dot" style="background:${dotColor};" onclick="togglePaid('${bill.id}')" title="Click to mark as ${isPaid ? 'unpaid' : 'paid'}">
                                 ${checkMark}
                             </div>
                             <div class="bill-card-info" onclick="togglePaid('${bill.id}')" style="cursor:pointer;">
@@ -1376,23 +1385,8 @@
                             </div>
                         </div>
                     `;
-                    listEl.appendChild(card);
-                });
-            }
-
-            // Group 2: UPCOMING (Monthly scheduled bills with calendar date tiles)
-            if (upcomingBills.length > 0) {
-                const upcomingHeader = document.createElement('div');
-                upcomingHeader.className = 'section-group-label';
-                upcomingHeader.innerText = 'Upcoming';
-                listEl.appendChild(upcomingHeader);
-
-                upcomingBills.forEach(bill => {
-                    const isPaid = state.paidBills.includes(bill.id);
-                    const isOverdue = !!bill.isOverdue;
-                    const card = document.createElement('div');
-                    card.className = `bill-card-item ${isPaid ? 'paid' : ''}`;
-
+                } else {
+                    const isOverdue = !!bill.isOverdue && !isPaid;
                     const billDate = bill.originalDate || new Date();
                     const monthStr = billDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
                     const dayStr = billDate.getDate();
@@ -1401,7 +1395,7 @@
                     if (bill.isPushed) subtitle = `${monthStr} ${dayStr} · Pushed`;
                     if (isOverdue) subtitle = `Overdue · Due ${monthStr} ${dayStr}`;
 
-                    // Push / Return Button
+                    // Push / Return Button (only on unpaid bills)
                     let pushAction = '';
                     if (!isPaid) {
                         if (state.viewOffset === 0) {
@@ -1415,7 +1409,7 @@
 
                     card.innerHTML = `
                         <div class="bill-card-left">
-                            <div class="date-tile" style="position:relative;" onclick="togglePaid('${bill.id}')" title="Click to mark as paid">
+                            <div class="date-tile" style="position:relative;" onclick="togglePaid('${bill.id}')" title="Click to mark as ${isPaid ? 'unpaid' : 'paid'}">
                                 ${checkOverlay}
                                 <span class="date-tile-month">${monthStr}</span>
                                 <span class="date-tile-day">${dayStr}</span>
@@ -1433,7 +1427,43 @@
                             ${pushAction}
                         </div>
                     `;
-                    listEl.appendChild(card);
+                }
+                return card;
+            };
+
+            // 1. Group: WEEKLY (unpaid biweekly flexible bills)
+            if (unpaidWeekly.length > 0) {
+                const weeklyHeader = document.createElement('div');
+                weeklyHeader.className = 'section-group-label';
+                weeklyHeader.innerText = 'Weekly';
+                listEl.appendChild(weeklyHeader);
+
+                unpaidWeekly.forEach(bill => {
+                    listEl.appendChild(renderBillCard(bill, false));
+                });
+            }
+
+            // 2. Group: UPCOMING (unpaid monthly scheduled bills)
+            if (unpaidUpcoming.length > 0) {
+                const upcomingHeader = document.createElement('div');
+                upcomingHeader.className = 'section-group-label';
+                upcomingHeader.innerText = 'Upcoming';
+                listEl.appendChild(upcomingHeader);
+
+                unpaidUpcoming.forEach(bill => {
+                    listEl.appendChild(renderBillCard(bill, false));
+                });
+            }
+
+            // 3. Group: PAID (all paid bills moved down to bottom of the list)
+            if (paidBills.length > 0) {
+                const paidHeader = document.createElement('div');
+                paidHeader.className = 'section-group-label';
+                paidHeader.innerText = 'Paid';
+                listEl.appendChild(paidHeader);
+
+                paidBills.forEach(bill => {
+                    listEl.appendChild(renderBillCard(bill, true));
                 });
             }
         }
