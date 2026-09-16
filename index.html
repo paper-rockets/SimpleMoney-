@@ -30,6 +30,10 @@
             --recording-color: #ff4444;
             --danger-color: #ff7b72;
             --hover-color: #ffffff;
+            /* Subtle fills for inset rows and inputs. The flat themes zero these out
+               and let their strong borders carry the structure instead. */
+            --wash: rgba(255, 255, 255, 0.04);
+            --wash-input: rgba(255, 255, 255, 0.05);
             --fs-scale: 1.05;
             --radius: 16px;
             --radius-sm: 10px;
@@ -1034,6 +1038,515 @@
             cursor: pointer;
         }
 
+        /* ══════════════════════════════════════
+           CASH FLOW: VALLEY, CHART, WHAT-IF
+           ══════════════════════════════════════ */
+        .valley-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 10px;
+            padding: 7px 10px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.78em;
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+        .valley-row strong { color: var(--text-main); font-weight: 700; }
+        .valley-row svg { flex-shrink: 0; }
+
+        .panel-card {
+            margin-top: 14px;
+            padding: 13px 14px 11px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+        }
+
+        .panel-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .panel-card-title {
+            font-size: 0.68em;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .panel-card-action {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 0.74em;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 4px;
+            min-width: auto;
+            flex: none;
+        }
+
+        .horizon-select {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 0.72em;
+            font-weight: 600;
+            padding: 3px 6px;
+            border-radius: 7px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .chart-wrap { position: relative; }
+        .forecast-svg { width: 100%; height: auto; display: block; overflow: visible; }
+        .forecast-svg text { font-family: inherit; }
+        #chart-hit { cursor: crosshair; }
+
+        .chart-empty {
+            padding: 26px 8px;
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 0.7em;
+            color: var(--text-dim);
+        }
+        .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .chart-legend i {
+            width: 10px;
+            height: 2.5px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+        .chart-legend i.dashed {
+            background-image: linear-gradient(90deg, currentColor 55%, transparent 55%) !important;
+            background-size: 5px 100%;
+        }
+
+        .chart-tooltip {
+            display: none;
+            position: absolute;
+            top: 2px;
+            z-index: 5;
+            pointer-events: none;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 7px 9px;
+            font-size: 0.68em;
+            line-height: 1.45;
+            min-width: 108px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+        .chart-tooltip .tt-date { color: var(--text-muted); font-size: 0.92em; }
+        .chart-tooltip .tt-bal { color: var(--text-main); font-weight: 700; font-size: 1.28em; margin: 1px 0 3px; }
+        .chart-tooltip .tt-line { color: var(--text-dim); white-space: nowrap; }
+        .chart-tooltip .tt-in { color: #0ca30c; }
+        .chart-tooltip .tt-buy { color: var(--danger-color); }
+        .chart-tooltip .tt-alt { color: var(--text-muted); margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--border-color); }
+
+        .whatif-input-row { display: flex; gap: 8px; margin-bottom: 9px; }
+
+        .whatif-amount-wrap {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0 10px;
+        }
+        .whatif-amount-wrap span { color: var(--text-muted); font-size: 0.92em; font-weight: 600; }
+        .whatif-amount-wrap input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1.15em;
+            font-weight: 700;
+            padding: 9px 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .whatif-date {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 0.8em;
+            padding: 9px 8px;
+            outline: none;
+        }
+
+        .whatif-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+
+        .whatif-chip {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 0.74em;
+            font-weight: 600;
+            padding: 6px 11px;
+            border-radius: 999px;
+            cursor: pointer;
+            min-width: auto;
+            flex: none;
+        }
+        .whatif-chip.active {
+            background: var(--accent-soft);
+            border-color: var(--accent-line);
+            color: var(--text-main);
+        }
+
+        .whatif-idle { font-size: 0.76em; color: var(--text-muted); line-height: 1.45; padding: 2px 0; }
+
+        .whatif-verdict {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.92em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .whatif-icon {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 0.66em;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .whatif-detail { font-size: 0.78em; color: var(--text-dim); line-height: 1.45; }
+        .whatif-detail strong { color: var(--text-main); }
+
+        .whatif-compare {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 9px 11px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-sm);
+        }
+        .whatif-compare > div { display: flex; flex-direction: column; gap: 1px; }
+        .whatif-compare span { font-size: 0.66em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .whatif-compare strong { font-size: 1.02em; color: var(--text-main); font-weight: 700; }
+        .whatif-arrow { color: var(--text-muted); font-size: 1em; }
+
+        .whatif-suggest {
+            margin-top: 10px;
+            padding: 9px 11px;
+            border-left: 2px solid var(--accent-line);
+            background: var(--accent-soft);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.76em;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        .whatif-suggest strong { color: var(--text-main); }
+
+        .whatif-apply {
+            display: block;
+            margin-top: 7px;
+            background: transparent;
+            border: 1px solid var(--accent-line);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.92em;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            min-width: auto;
+            flex: none;
+        }
+
+        /* Settings fields */
+        .settings-field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .settings-field-row label { font-size: 0.78em; color: var(--text-dim); }
+
+        .settings-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 0 9px;
+        }
+        .settings-input-wrap span { color: var(--text-muted); font-size: 0.82em; }
+        .settings-input-wrap input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.88em;
+            font-weight: 600;
+            padding: 7px 0;
+            width: 82px;
+            text-align: right;
+        }
+
+        .settings-date {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.82em;
+            padding: 7px 9px;
+            outline: none;
+        }
+
+        .settings-hint { font-size: 0.72em; color: var(--text-muted); line-height: 1.5; }
+        .settings-hint a { color: var(--accent-blue); }
+
+        .key-status { font-size: 0.74em; font-weight: 600; }
+
+        .key-input-row { display: flex; gap: 7px; }
+        .key-input-row input {
+            flex: 1;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.84em;
+            padding: 8px 10px;
+            outline: none;
+        }
+        .key-save-btn { flex: none; min-width: auto; padding: 8px 16px; font-size: 0.82em; }
+
+        /* ══════════════════════════════════════
+           MINIMAL PASS
+           No card fills, no boxes. Space and a single hairline carry the
+           structure; the numbers are the only thing with weight. This also
+           makes every theme work, since nothing hardcodes a dark surface.
+           ══════════════════════════════════════ */
+        :root { --wash: transparent; --wash-input: transparent; }
+
+        #app-container {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 18px !important;
+            gap: 0 !important;
+        }
+
+        /* Cycle selector: text tabs, not cards */
+        .cycle-panels-row { gap: 22px; margin-bottom: 26px; }
+        .cycle-panel,
+        .cycle-panel:hover,
+        .cycle-panel.active {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 0 8px;
+            gap: 3px;
+            min-height: 0;
+            opacity: 0.45;
+        }
+        .cycle-panel.active { opacity: 1; border-bottom-color: var(--text-main); }
+        .cycle-panel-top { display: block; }
+        .cycle-panel-tag {
+            display: block;
+            font-size: 0.62em;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .cycle-panel.active .cycle-panel-tag { color: var(--text-muted); }
+        .cycle-panel-amount { font-size: 1.32em; font-weight: 600; letter-spacing: -0.02em; }
+        .cycle-panel-dates { font-size: 0.66em; white-space: normal; }
+
+        /* Hero */
+        .summary-section {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            gap: 6px;
+        }
+        .summary-cycle-badge { display: none; }
+        .summary-label { font-size: 0.64em; letter-spacing: 0.16em; color: var(--text-muted); font-weight: 600; }
+        .summary-primary-amount {
+            font-size: clamp(3.2em, 16vw, 4.2em);
+            font-weight: 300;
+            letter-spacing: -0.045em;
+            line-height: 1;
+        }
+        .summary-breakdown-row { font-size: 0.76em; color: var(--text-muted); max-width: 30em; }
+
+        .summary-bank-row {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 0;
+            padding: 0 0 7px;
+            margin-top: 18px;
+        }
+        .summary-bank-label { font-size: 0.64em; letter-spacing: 0.14em; color: var(--text-muted); font-weight: 600; }
+
+        .valley-row {
+            background: transparent;
+            padding: 0;
+            margin-top: 14px;
+            font-size: 0.76em;
+        }
+
+        /* Sections: a label and air, no container */
+        .panel-card {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin-top: 34px;
+        }
+        .panel-card-title { font-size: 0.62em; letter-spacing: 0.16em; }
+        .chart-legend { gap: 14px; margin-top: 10px; font-size: 0.66em; }
+
+        .horizon-select,
+        .panel-card-action { border: none; padding: 0; color: var(--text-muted); font-size: 0.68em; }
+
+        /* Inputs: a rule underneath, nothing more */
+        .whatif-amount-wrap,
+        .whatif-date,
+        .settings-input-wrap,
+        .settings-date,
+        .key-input-row input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .whatif-input-row { gap: 18px; }
+        .whatif-date { font-size: 0.74em; }
+
+        .whatif-chip {
+            border: none;
+            border-bottom: 1px solid transparent;
+            border-radius: 0;
+            padding: 3px 0;
+            margin-right: 16px;
+            opacity: 0.45;
+            background: transparent;
+        }
+        .whatif-chip.active {
+            background: transparent;
+            opacity: 1;
+            border-bottom-color: var(--text-main);
+            color: var(--text-main);
+        }
+        .whatif-chips { gap: 0; margin-bottom: 16px; }
+
+        .whatif-compare {
+            background: transparent;
+            padding: 12px 0 0;
+            margin-top: 12px;
+            border-top: 1px solid var(--border-color);
+            border-radius: 0;
+        }
+
+        .whatif-suggest {
+            background: transparent;
+            border-left: none;
+            border-top: 1px solid var(--border-color);
+            border-radius: 0;
+            padding: 12px 0 0;
+        }
+        .whatif-apply { border-radius: 0; border: none; border-bottom: 1px solid var(--text-main); padding: 3px 0; }
+
+        .whatif-verdict { font-weight: 600; }
+        .whatif-icon { display: none; }
+
+        .bills-section-header { padding: 0; margin-top: 34px; }
+        .bills-section-title { font-size: 0.62em; letter-spacing: 0.16em; color: var(--text-muted); }
+
+        .bill-dense-row { padding-left: 0; padding-right: 0; }
+
+        .chart-tooltip { border-radius: 0; box-shadow: none; }
+
+        /* The flat themes style every button and number input with !important,
+           which would re-box the controls the minimal pass just stripped. */
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) :is(
+            .whatif-chip, .panel-card-action, .whatif-apply, .horizon-select, .key-save-btn
+        ) {
+            background: transparent !important;
+            border: none !important;
+            color: var(--text-hi) !important;
+            font-weight: 600 !important;
+        }
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) .whatif-chip {
+            border-bottom: 1px solid transparent !important;
+        }
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) .whatif-chip.active,
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) .whatif-apply,
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) .key-save-btn {
+            border-bottom: 1px solid var(--text-hi) !important;
+        }
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) :is(
+            .whatif-amount-wrap, .whatif-date, .settings-input-wrap, .settings-date,
+            .summary-bank-row, .key-input-row input
+        ) {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 1px solid var(--hr) !important;
+            border-radius: 0 !important;
+        }
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) :is(
+            .whatif-amount-wrap, .settings-input-wrap, .summary-bank-input-wrap
+        ) input {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        @media (max-width: 600px) {
+            .summary-section { padding: 0; gap: 7px; }
+            .cycle-panel { min-height: 0; padding: 0 0 8px; }
+            .cycle-panel-tag { font-size: 0.7em; letter-spacing: 0.13em; }
+            .cycle-panel-amount { font-size: 1.32em; }
+            .cycle-panel-dates { font-size: 0.72em; }
+            .summary-label { font-size: 0.72em; }
+            .summary-bank-label { font-size: 0.72em; }
+        }
+
     </style>
 </head>
 <body>
@@ -1080,16 +1593,45 @@
                 </div>
             </div>
 
-            <!-- Hairline Progress Indicator -->
-            <div class="hairline-progress-container">
-                <div class="hairline-progress-track">
-                    <div class="hairline-progress-fill" id="progress-fill" style="width: 0%;"></div>
-                </div>
-                <div class="hairline-progress-stats">
-                    <span id="progress-count-label">0 of 0 bills paid</span>
-                    <span id="progress-pct-label">0%</span>
-                </div>
+            <!-- Lowest-point warning -->
+            <div class="valley-row" id="valley-row" style="display:none;"></div>
+
+        </div>
+
+        <!-- Balance Forecast Chart -->
+        <div class="panel-card">
+            <div class="panel-card-head">
+                <span class="panel-card-title">BALANCE FORECAST</span>
+                <select id="horizon-select" class="horizon-select" onchange="changeHorizon(this.value)">
+                    <option value="14">2 weeks</option>
+                    <option value="28">4 weeks</option>
+                    <option value="42">6 weeks</option>
+                    <option value="90">3 months</option>
+                </select>
             </div>
+            <div class="chart-wrap" id="forecast-chart"></div>
+        </div>
+
+        <!-- What-If Purchase Projection -->
+        <div class="panel-card">
+            <div class="panel-card-head">
+                <span class="panel-card-title">WHAT IF I SPEND…</span>
+                <button class="panel-card-action" onclick="clearWhatIf()">Clear</button>
+            </div>
+            <div class="whatif-input-row">
+                <div class="whatif-amount-wrap">
+                    <span>$</span>
+                    <input type="number" id="whatif-amount" placeholder="500" inputmode="decimal" step="1"
+                           oninput="updateWhatIfAmount(this.value)">
+                </div>
+                <input type="date" id="whatif-date" class="whatif-date" onchange="updateWhatIfDate(this.value)">
+            </div>
+            <div class="whatif-chips">
+                <button class="whatif-chip" id="whatif-chip-today" onclick="setWhatIfWhen('today')">Today</button>
+                <button class="whatif-chip" id="whatif-chip-nextpay" onclick="setWhatIfWhen('nextpay')">After next pay</button>
+                <button class="whatif-chip" id="whatif-chip-custom" onclick="setWhatIfWhen('custom')">Pick a date</button>
+            </div>
+            <div id="whatif-result"></div>
         </div>
 
         <!-- Bills Section Header -->
@@ -1149,10 +1691,48 @@
                     <button class="modal-close-btn" onclick="toggleOverviewModal(false)">&times;</button>
                 </div>
 
+                <!-- Income & Cash Flow -->
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <span class="settings-label">Income</span>
+                    <div class="settings-field-row">
+                        <label for="pay-amount-input">Pay per cheque</label>
+                        <div class="settings-input-wrap">
+                            <span>$</span>
+                            <input type="number" id="pay-amount-input" step="0.01" inputmode="decimal"
+                                   onchange="updatePayAmount(this.value)">
+                        </div>
+                    </div>
+                    <div class="settings-field-row">
+                        <label for="payday-anchor-input">A payday (sets the 14-day rhythm)</label>
+                        <input type="date" id="payday-anchor-input" class="settings-date"
+                               onchange="updatePaydayAnchor(this.value)">
+                    </div>
+                    <div class="settings-field-row">
+                        <label for="safety-buffer-input">Keep a cushion of</label>
+                        <div class="settings-input-wrap">
+                            <span>$</span>
+                            <input type="number" id="safety-buffer-input" step="1" inputmode="decimal" placeholder="0"
+                                   onchange="updateSafetyBuffer(this.value)">
+                        </div>
+                    </div>
+                    <div class="settings-hint" id="income-hint"></div>
+                </div>
+
                 <!-- Gemini AI Assistant -->
-                <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display:flex; flex-direction:column; gap:8px;">
                     <span class="settings-label">Gemini Financial Assistant</span>
-                    <textarea id="gemini-input" placeholder="Ask: can I afford to buy..."></textarea>
+                    <div class="settings-field-row">
+                        <label for="gemini-key-input">API key</label>
+                        <span class="key-status" id="key-status"></span>
+                    </div>
+                    <div class="key-input-row">
+                        <input type="password" id="gemini-key-input" placeholder="AIzaSy…" autocomplete="off" spellcheck="false">
+                        <button class="secondary key-save-btn" onclick="saveApiKeyFromField()">Save</button>
+                    </div>
+                    <div class="settings-hint">
+                        Free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Stored only on this device.
+                    </div>
+                    <textarea id="gemini-input" placeholder="Ask: can I afford a $500 phone this week?"></textarea>
                     <div class="action-row">
                         <button onclick="executeLiveTextQuery()">Ask Gemini</button>
                         <button class="secondary" id="voice-btn" onclick="toggleVoiceRecording()">Voice input</button>
@@ -1225,36 +1805,67 @@
 
     <script>
         // --- 0. API CONFIGURATION ---
-        const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY";
-
         function getApiKey() {
-            let key = localStorage.getItem('gemini-api-key');
-            if (!key || key === "YOUR_GEMINI_API_KEY") {
-                key = prompt("Please enter your Gemini API Key (starts with AIzaSy...):");
-                if (key) {
-                    key = key.trim();
-                    localStorage.setItem('gemini-api-key', key);
-                }
-            }
-            return key || GEMINI_API_KEY;
+            const key = localStorage.getItem('gemini-api-key');
+            return (key && key !== "YOUR_GEMINI_API_KEY") ? key : null;
         }
 
-        function promptNewApiKey() {
-            localStorage.removeItem('gemini-api-key');
-            const newKey = prompt("Please enter your Gemini API Key (starts with AIzaSy...):");
-            if (newKey) {
-                localStorage.setItem('gemini-api-key', newKey.trim());
-                executeLiveTextQuery();
+        function refreshKeyStatus() {
+            const el = document.getElementById('key-status');
+            if (!el) return;
+            const key = getApiKey();
+            el.textContent = key ? `Saved ····${key.slice(-4)}` : 'Not set';
+            el.style.color = key ? 'var(--success-color, #0ca30c)' : 'var(--text-dim)';
+        }
+
+        function saveApiKeyFromField() {
+            const input = document.getElementById('gemini-key-input');
+            if (!input) return;
+            const key = input.value.trim();
+            if (!key) return;
+            localStorage.setItem('gemini-api-key', key);
+            input.value = '';
+            refreshKeyStatus();
+            const container = document.getElementById("ai-response-container");
+            if (container) {
+                container.innerHTML = `<div class="ai-output-card" style="color:var(--text-dim);">Key saved. Ask away.</div>`;
             }
+        }
+
+        // Kept for the error card's retry button — focuses the field instead of a blocking prompt.
+        function promptNewApiKey() {
+            toggleOverviewModal(true);
+            const input = document.getElementById('gemini-key-input');
+            if (input) { input.focus(); input.select(); }
         }
 
         function deleteApiKey() {
             localStorage.removeItem('gemini-api-key');
+            refreshKeyStatus();
             const container = document.getElementById("ai-response-container");
             if (container) {
-                container.innerHTML = `<div class="ai-output-card" style="color:var(--text-dim);">Gemini API Key removed.</div>`;
+                container.innerHTML = `<div class="ai-output-card" style="color:var(--text-dim);">Gemini API key removed.</div>`;
             }
-            alert("Saved Gemini API Key deleted!");
+        }
+
+        // Mirrors saved settings into the overview modal each time it opens.
+        function syncSettingsFields() {
+            const pay = document.getElementById('pay-amount-input');
+            const anchor = document.getElementById('payday-anchor-input');
+            const buffer = document.getElementById('safety-buffer-input');
+            const horizon = document.getElementById('horizon-select');
+            const hint = document.getElementById('income-hint');
+
+            if (pay) pay.value = state.payAmount;
+            if (anchor) anchor.value = state.paydayAnchor;
+            if (buffer) buffer.value = state.safetyBuffer || '';
+            if (horizon) horizon.value = String(state.horizonDays);
+            if (hint) {
+                const next = nextPaydayFrom(startOfDay(new Date()).getTime() + MS_PER_DAY);
+                const fmt = new Date(next).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                hint.textContent = `Next pay: $${Math.round(state.payAmount).toLocaleString()} on ${fmt}.`;
+            }
+            refreshKeyStatus();
         }
 
         // --- 1. CORE STATE ---
@@ -1265,6 +1876,18 @@
             daysRemaining: 14,
             currentCycleIndex: 0,
             viewOffset: 0,
+
+            // Income: pay lands every 14 days, anchored to paydayAnchor.
+            payAmount: 1790.00,
+            paydayAnchor: '2026-07-17',
+
+            // Cash flow settings
+            safetyBuffer: 0,
+            horizonDays: 42,
+
+            // Transient purchase projection (not persisted)
+            whatIf: { amount: 0, when: 'today', dateTs: null },
+            lastForecast: null,
 
             biweeklyExpenses: [
                 { id: 'bw_1', name: "Groceries", amount: 200.00 },
@@ -1294,23 +1917,246 @@
         };
 
         // --- 2. TIME ENGINE ---
-        const BASE_PAYDAY = new Date('2026-07-17T00:00:00');
+        const MS_PER_DAY = 1000 * 60 * 60 * 24;
+        let BASE_PAYDAY = new Date('2026-07-17T00:00:00');
+
+        function startOfDay(d) {
+            const c = new Date(d);
+            c.setHours(0, 0, 0, 0);
+            return c;
+        }
+
+        // Negative amounts read as -$120, never $-120.
+        function money(v) {
+            const n = Math.round(v);
+            return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString();
+        }
+
+        function refreshPaydayAnchor() {
+            const parsed = new Date(`${state.paydayAnchor}T00:00:00`);
+            if (!isNaN(parsed.getTime())) BASE_PAYDAY = parsed;
+        }
 
         function updateCycleEngine() {
+            refreshPaydayAnchor();
             const today = new Date();
-            const msPerDay = 1000 * 60 * 60 * 24;
+            const msPerDay = MS_PER_DAY;
 
             const diffTime = today.getTime() - BASE_PAYDAY.getTime();
             const totalDaysSinceAnchor = Math.floor(diffTime / msPerDay);
 
             state.currentCycleIndex = Math.floor(totalDaysSinceAnchor / 14);
-            const daysIntoCurrentCycle = totalDaysSinceAnchor % 14;
+            const daysIntoCurrentCycle = ((totalDaysSinceAnchor % 14) + 14) % 14;
             state.daysRemaining = 14 - daysIntoCurrentCycle;
 
-            state.cycleStart = new Date(today.getTime() - (daysIntoCurrentCycle * msPerDay));
-            state.cycleEnd = new Date(today.getTime() + (state.daysRemaining * msPerDay));
+            const midnight = startOfDay(today);
+            state.cycleStart = new Date(midnight.getTime() - (daysIntoCurrentCycle * msPerDay));
+            state.cycleEnd = new Date(midnight.getTime() + (state.daysRemaining * msPerDay));
 
             renderCycleHeaders();
+        }
+
+        // --- 2b. CASH FLOW FORECAST ENGINE ---
+        // Walks forward one day at a time from today's bank balance, adding pay on
+        // paydays and subtracting every bill that is still unpaid. This is the single
+        // source of truth for "what will actually be in the account on day N".
+        function isPayday(ts) {
+            const days = Math.round((ts - BASE_PAYDAY.getTime()) / MS_PER_DAY);
+            return days >= 0 && days % 14 === 0;
+        }
+
+        function nextPaydayFrom(ts) {
+            const days = Math.ceil((ts - BASE_PAYDAY.getTime()) / MS_PER_DAY);
+            const cyclesAhead = Math.ceil(days / 14);
+            return BASE_PAYDAY.getTime() + (cyclesAhead * 14 * MS_PER_DAY);
+        }
+
+        // Every unpaid obligation with a real calendar date, keyed by day timestamp.
+        function collectOutflows(todayTs, horizonTs) {
+            const outflows = new Map();
+            const push = (ts, item) => {
+                if (!outflows.has(ts)) outflows.set(ts, []);
+                outflows.get(ts).push(item);
+            };
+
+            // Monthly bills, on their real due dates. The scan starts at the current
+            // cycle, never earlier: a bill from a past cycle is already reflected in
+            // the bank balance the user typed, so counting it would double-charge them.
+            // Still-unpaid bills from earlier in THIS cycle land on today — you owe them now.
+            const earliestTs = state.cycleStart.getTime();
+            const loopStart = new Date(earliestTs);
+            let loop = new Date(loopStart.getFullYear(), loopStart.getMonth(), 1);
+            const loopEnd = new Date(horizonTs);
+            loopEnd.setMonth(loopEnd.getMonth() + 2);
+
+            while (loop < loopEnd) {
+                const m = loop.getMonth();
+                const y = loop.getFullYear();
+                state.monthlyExpenses.forEach(exp => {
+                    const instanceId = `${exp.id}_${y}_${m}`;
+                    if (state.paidBills.includes(instanceId)) return;
+
+                    const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
+                        ? state.customAmounts[instanceId]
+                        : exp.amount;
+                    if (!amount) return;
+
+                    let dueTs = startOfDay(new Date(y, m, exp.dueDay)).getTime();
+                    if (dueTs < earliestTs) return;
+                    if (state.deferredBills.includes(instanceId)) dueTs += 14 * MS_PER_DAY;
+                    if (dueTs < todayTs) dueTs = todayTs;
+                    if (dueTs > horizonTs) return;
+
+                    push(dueTs, { name: exp.name, amount, kind: 'bill' });
+                });
+                loop.setMonth(loop.getMonth() + 1);
+            }
+
+            // Flexible biweekly spend (groceries, buffer): no fixed date, so it is
+            // spread evenly across the days left in each cycle it belongs to.
+            const firstCycleStart = state.cycleStart.getTime();
+            for (let offset = 0; offset < 12; offset++) {
+                const cycleStartTs = firstCycleStart + (offset * 14 * MS_PER_DAY);
+                if (cycleStartTs > horizonTs) break;
+                const cycleIndex = state.currentCycleIndex + offset;
+
+                let flexTotal = 0;
+                state.biweeklyExpenses.forEach(exp => {
+                    const instanceId = `${exp.id}_cycle_${cycleIndex}`;
+                    if (state.paidBills.includes(instanceId)) return;
+                    const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
+                        ? state.customAmounts[instanceId]
+                        : exp.amount;
+                    flexTotal += amount || 0;
+                });
+                if (flexTotal <= 0) continue;
+
+                const spreadStart = Math.max(cycleStartTs, todayTs);
+                const cycleEndTs = cycleStartTs + (14 * MS_PER_DAY);
+                const spreadDays = Math.round((cycleEndTs - spreadStart) / MS_PER_DAY);
+                if (spreadDays <= 0) continue;
+
+                const perDay = flexTotal / spreadDays;
+                for (let d = 0; d < spreadDays; d++) {
+                    const ts = spreadStart + (d * MS_PER_DAY);
+                    if (ts > horizonTs) break;
+                    push(ts, { name: 'Everyday spending', amount: perDay, kind: 'flex' });
+                }
+            }
+
+            return outflows;
+        }
+
+        function buildForecast(options = {}) {
+            const horizonDays = options.horizonDays || state.horizonDays;
+            const purchases = options.purchases || [];
+            const startBalance = options.startBalance !== undefined
+                ? options.startBalance
+                : state.currentBalance;
+
+            const todayTs = startOfDay(new Date()).getTime();
+            const horizonTs = todayTs + (horizonDays * MS_PER_DAY);
+            const outflows = collectOutflows(todayTs, horizonTs);
+
+            const purchaseByDay = new Map();
+            purchases.forEach(p => {
+                const ts = startOfDay(new Date(p.ts)).getTime();
+                purchaseByDay.set(ts, (purchaseByDay.get(ts) || 0) + p.amount);
+            });
+
+            const days = [];
+            let balance = startBalance;
+            let minBalance = Infinity;
+            let minTs = todayTs;
+            let firstNegativeTs = null;
+            let totalBills = 0;
+            let totalIncome = 0;
+
+            for (let d = 0; d <= horizonDays; d++) {
+                const ts = todayTs + (d * MS_PER_DAY);
+
+                // Pay already in the account is part of the balance the user typed,
+                // so only paydays strictly after today add money.
+                const income = (d > 0 && isPayday(ts)) ? state.payAmount : 0;
+                const items = outflows.get(ts) || [];
+                const out = items.reduce((sum, i) => sum + i.amount, 0);
+                const purchase = purchaseByDay.get(ts) || 0;
+
+                balance += income - out - purchase;
+                totalBills += out;
+                totalIncome += income;
+
+                if (balance < minBalance) {
+                    minBalance = balance;
+                    minTs = ts;
+                }
+                if (balance < 0 && firstNegativeTs === null) firstNegativeTs = ts;
+
+                days.push({
+                    ts,
+                    date: new Date(ts),
+                    income,
+                    out,
+                    purchase,
+                    items,
+                    balance
+                });
+            }
+
+            return {
+                days,
+                minBalance: minBalance === Infinity ? startBalance : minBalance,
+                minTs,
+                firstNegativeTs,
+                endBalance: balance,
+                totalBills,
+                totalIncome,
+                horizonTs,
+                todayTs
+            };
+        }
+
+        // The honest headline: spend this much today and the lowest point in the
+        // forecast still clears your safety buffer.
+        function safeToSpendToday(forecast) {
+            return Math.max(0, forecast.minBalance - (state.safetyBuffer || 0));
+        }
+
+        function changeHorizon(val) {
+            const n = parseInt(val, 10);
+            if (!isNaN(n)) state.horizonDays = n;
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
+        }
+
+        function updatePayAmount(val) {
+            const n = parseFloat(val);
+            if (isNaN(n) || n < 0) return;
+            state.payAmount = n;
+            renderCycleHeaders();
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
+        }
+
+        function updatePaydayAnchor(val) {
+            if (!val) return;
+            const parsed = new Date(`${val}T00:00:00`);
+            if (isNaN(parsed.getTime())) return;
+            state.paydayAnchor = val;
+            updateCycleEngine();
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
+        }
+
+        function updateSafetyBuffer(val) {
+            const n = parseFloat(val);
+            state.safetyBuffer = isNaN(n) ? 0 : n;
+            recalculateCashFlow();
+            saveStateToLocalStorage();
+            if (window.saveStateToFirebase) window.saveStateToFirebase();
         }
 
         function renderCycleHeaders() {
@@ -1326,9 +2172,22 @@
                 return { offset, start, end, inclusiveEnd, sum };
             });
 
+            // Projected balance at each cycle's end, so an upcoming cycle shows what
+            // it actually leaves you with rather than a bare bill total.
+            const projection = state.currentBalance ? buildForecast({ horizonDays: 30 }) : null;
+
             const headerHTML = cycles.map(c => {
                 const isSelected = c.offset === state.viewOffset;
-                const tag = c.offset === 0 ? "BILLS THIS CYCLE" : "NEXT CYCLE BILLS";
+                const tag = c.offset === 0 ? "THIS CYCLE" : "NEXT CYCLE";
+
+                let footer = `${formatDate(c.start)} – ${formatDate(c.inclusiveEnd)}`;
+                if (projection) {
+                    const endDay = projection.days.find(d => d.ts >= c.inclusiveEnd.getTime());
+                    if (endDay) {
+                        const left = Math.round(endDay.balance);
+                        footer += ` · <span style="color:${left < 0 ? 'var(--danger-color)' : 'inherit'}">${money(left)} left</span>`;
+                    }
+                }
 
                 return `
                     <div class="cycle-panel ${isSelected ? 'active' : ''}" onclick="setViewCycle(${c.offset})">
@@ -1336,7 +2195,7 @@
                             <span class="cycle-panel-tag">${tag}</span>
                             <span class="cycle-panel-amount">$${c.sum.toLocaleString()}</span>
                         </div>
-                        <div class="cycle-panel-dates">${formatDate(c.start)} – ${formatDate(c.inclusiveEnd)}</div>
+                        <div class="cycle-panel-dates">${footer}</div>
                     </div>
                 `;
             }).join('');
@@ -1381,8 +2240,11 @@
                 activeBills.push({...exp, amount, id: instanceId, isBiweekly: true});
             });
 
+            // Scan from the current cycle only. Anything older is already settled in
+            // the bank balance, and listing months of stale unpaid bills buried the
+            // ones that actually matter.
             const maxForecastEnd = new Date(state.cycleStart.getTime() + (3 * 14 * msPerDay));
-            let startMonthYear = { m: BASE_PAYDAY.getMonth(), y: BASE_PAYDAY.getFullYear() };
+            let startMonthYear = { m: currentCycleStart.getMonth(), y: currentCycleStart.getFullYear() };
             let endMonthYear = { m: maxForecastEnd.getMonth(), y: maxForecastEnd.getFullYear() };
 
             let currentLoopDate = new Date(startMonthYear.y, startMonthYear.m, 1);
@@ -1396,7 +2258,7 @@
                     let billDate = new Date(y, m, exp.dueDay);
                     billDate.setHours(0, 0, 0, 0);
 
-                    if (billDate >= BASE_PAYDAY) {
+                    if (billDate >= currentCycleStart) {
                         const instanceId = `${exp.id}_${y}_${m}`;
                         const isPaid = state.paidBills.includes(instanceId);
                         const isDeferred = state.deferredBills.includes(instanceId);
@@ -1405,9 +2267,7 @@
                             : exp.amount;
 
                         const isDueInThisCycle = billDate >= targetCycleStart && billDate < targetCycleEnd;
-                        const isDueInCurrent = billDate >= currentCycleStart && billDate < currentCycleEnd;
-                        const isOverdue = billDate < currentCycleStart && !isPaid;
-                        const isCurrentCandidate = isDueInCurrent || isOverdue;
+                        const isCurrentCandidate = billDate >= currentCycleStart && billDate < currentCycleEnd;
 
                         if (targetOffset === 0) {
                             // Current cycle: shows unpaid overdue bills and current bills that have NOT been pushed
@@ -1501,24 +2361,7 @@
             const isUpcoming = state.viewOffset > 0;
             const cycleTitle = state.viewOffset === 0 ? "Current" : "Next";
 
-            // 1. Progress Bar & Bill Counts
-            const totalCount = cycleData.list.length;
-            const paidCount = cycleData.list.filter(b => state.paidBills.includes(b.id)).length;
-            const pct = totalCount > 0 ? Math.round((paidCount / totalCount) * 100) : 0;
-
-            const progressFillEl = document.getElementById("progress-fill");
-            const progressCountEl = document.getElementById("progress-count-label");
-            const progressPctEl = document.getElementById("progress-pct-label");
-            if (progressFillEl) progressFillEl.style.width = `${pct}%`;
-            if (progressCountEl) progressCountEl.innerText = `${paidCount} of ${totalCount} bills paid`;
-            if (progressPctEl) progressPctEl.innerText = `${pct}%`;
-
             // 2. Financial Metrics & Summary Section
-            const startingIncome = state.viewOffset === 0 ? state.currentBalance : 0;
-            let disposableLiquidity = startingIncome - cycleData.total;
-            let daysDivisor = state.viewOffset === 0 ? state.daysRemaining : 14;
-            let safeToSpendDaily = disposableLiquidity / daysDivisor;
-
             const heroStatusEl = document.getElementById("hero-status-label");
             const heroAmountEl = document.getElementById("hero-amount");
             const heroSubtextEl = document.getElementById("hero-subtext");
@@ -1535,44 +2378,49 @@
             if (cycleBadgeEl) cycleBadgeEl.innerText = cycleTitle;
             if (unpaidTotalEl) unpaidTotalEl.innerText = `$${Math.round(cycleData.total).toLocaleString()}`;
 
-            if (isUpcoming) {
-                if (heroStatusEl) heroStatusEl.innerText = `BILLS DUE BY ${endMonthDayStr.toUpperCase()}`;
-                if (heroAmountEl) {
-                    heroAmountEl.innerText = `$${Math.round(cycleData.total).toLocaleString()}`;
-                    heroAmountEl.style.color = "#ffffff";
-                }
-                if (heroSubtextEl) heroSubtextEl.innerText = `Next pay cycle · $${Math.round(cycleData.totalBillsSum).toLocaleString()} reserved for scheduled bills.`;
-                if (balContainer) balContainer.style.display = "none";
-            } else {
-                if (balContainer) balContainer.style.display = "flex";
-                if (balInput) {
-                    balInput.disabled = false;
-                    balInput.value = state.currentBalance !== 0 ? state.currentBalance : '';
-                }
+            // The hero is always anchored to today — it is the cash flow question
+            // ("what can I spend right now?"), not a property of the cycle being browsed.
+            const forecast = buildForecast();
+            state.lastForecast = forecast;
 
-                if (!state.currentBalance || state.currentBalance === 0) {
-                    if (heroStatusEl) heroStatusEl.innerText = `FREE TO SPEND BY ${endMonthDayStr.toUpperCase()}`;
+            if (balContainer) balContainer.style.display = "flex";
+            if (balInput && document.activeElement !== balInput) {
+                balInput.disabled = false;
+                balInput.value = state.currentBalance !== 0 ? state.currentBalance : '';
+            }
+
+            const fmtShort = (ts) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const horizonStr = fmtShort(forecast.horizonTs).toUpperCase();
+            const nextPayTs = nextPaydayFrom(forecast.todayTs + MS_PER_DAY);
+
+            if (!state.currentBalance || state.currentBalance === 0) {
+                if (heroStatusEl) heroStatusEl.innerText = "SAFE TO SPEND TODAY";
+                if (heroAmountEl) {
+                    heroAmountEl.innerText = "—";
+                    heroAmountEl.style.color = "var(--text-hi, #ffffff)";
+                }
+                if (heroSubtextEl) heroSubtextEl.innerText = "Enter your bank balance below and we'll work out what's actually yours to spend.";
+            } else {
+                const safe = safeToSpendToday(forecast);
+                if (forecast.firstNegativeTs !== null) {
+                    if (heroStatusEl) heroStatusEl.innerText = `SHORT BY ${fmtShort(forecast.minTs).toUpperCase()}`;
                     if (heroAmountEl) {
-                        heroAmountEl.innerText = "—";
-                        heroAmountEl.style.color = "#ffffff";
-                    }
-                    if (heroSubtextEl) heroSubtextEl.innerText = "Add the balance you can use, then we’ll hold back what your bills need.";
-                } else if (disposableLiquidity < 0) {
-                    if (heroStatusEl) heroStatusEl.innerText = `SHORT BY ${endMonthDayStr.toUpperCase()}`;
-                    if (heroAmountEl) {
-                        heroAmountEl.innerText = `-$${Math.abs(Math.round(disposableLiquidity)).toLocaleString()}`;
+                        heroAmountEl.innerText = money(forecast.minBalance);
                         heroAmountEl.style.color = "var(--danger-color)";
                     }
-                    if (heroSubtextEl) heroSubtextEl.innerText = `$${Math.round(startingIncome).toLocaleString()} available · $${Math.round(cycleData.total).toLocaleString()} still needed for bills.`;
+                    if (heroSubtextEl) heroSubtextEl.innerText = `You go under on ${fmtShort(forecast.firstNegativeTs)} and bottom out ${fmtShort(forecast.minTs)}. Next pay ${money(state.payAmount)} on ${fmtShort(nextPayTs)}.`;
                 } else {
-                    if (heroStatusEl) heroStatusEl.innerText = `FREE TO SPEND UNTIL ${endMonthDayStr.toUpperCase()}`;
+                    if (heroStatusEl) heroStatusEl.innerText = "SAFE TO SPEND TODAY";
                     if (heroAmountEl) {
-                        heroAmountEl.innerText = `$${Math.round(disposableLiquidity).toLocaleString()}`;
-                        heroAmountEl.style.color = "#ffffff";
+                        heroAmountEl.innerText = `$${Math.round(safe).toLocaleString()}`;
+                        heroAmountEl.style.color = "var(--text-hi, #ffffff)";
                     }
-                    if (heroSubtextEl) heroSubtextEl.innerText = `$${Math.round(cycleData.total).toLocaleString()} held for bills · about $${Math.max(0, Math.round(safeToSpendDaily)).toLocaleString()}/day for ${state.daysRemaining} ${state.daysRemaining === 1 ? 'day' : 'days'}.`;
+                    if (heroSubtextEl) heroSubtextEl.innerText = `Covers every bill through ${horizonStr}. Next pay $${Math.round(state.payAmount).toLocaleString()} on ${fmtShort(nextPayTs)}.`;
                 }
             }
+
+            renderValleyRow(forecast);
+            renderWhatIf(forecast);
 
             // 3. Render Categorized Dense Divider Rows
             const listEl = document.getElementById("bills-list");
@@ -1719,6 +2567,349 @@
             }
         }
 
+        // --- 4b. FORECAST VISUALS ---
+        // Theme-aware chart colors: the app ships five themes, so the palette is
+        // picked from the rendered background luminance rather than hardcoded.
+        function chartPalette() {
+            const bg = getComputedStyle(document.body).backgroundColor;
+            const nums = (bg.match(/\d+(\.\d+)?/g) || ['11', '11', '11']).map(Number);
+            const lum = (0.2126 * nums[0] + 0.7152 * nums[1] + 0.0722 * nums[2]) / 255;
+            const isLight = lum > 0.5;
+            return isLight
+                ? { base: '#2a78d6', alt: '#eb6834', danger: '#d03b3b', good: '#0ca30c',
+                    grid: '#c9c7c0', muted: '#6c6a65', ink: '#0b0b0b', isLight: true }
+                : { base: '#3987e5', alt: '#d95926', danger: '#e66767', good: '#0ca30c',
+                    grid: '#2c2c2a', muted: '#8f8d86', ink: '#ffffff', isLight: false };
+        }
+
+        function renderValleyRow(forecast) {
+            const el = document.getElementById('valley-row');
+            if (!el) return;
+            if (!state.currentBalance) { el.style.display = 'none'; return; }
+            el.style.display = 'flex';
+
+            const p = chartPalette();
+            const dateStr = new Date(forecast.minTs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const low = Math.round(forecast.minBalance);
+            const isBad = forecast.minBalance < 0;
+            const isTight = !isBad && forecast.minBalance < (state.safetyBuffer || 100);
+
+            const icon = isBad
+                ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${p.danger}" stroke-width="2.5" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>`
+                : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${isTight ? '#fab219' : p.good}" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+
+            // When negative the hero already names the worst day, so this row adds the
+            // thing the hero can't: how much room is left before it starts going wrong.
+            const label = isBad
+                ? `${forecast.firstNegativeTs === forecast.todayTs ? 'Already short today' : `Holds until ${new Date(forecast.firstNegativeTs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`} — ${money(state.payAmount)} lands ${new Date(nextPaydayFrom(forecast.todayTs + MS_PER_DAY)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                : `Lowest point <strong>${money(low)}</strong> on ${dateStr}`;
+
+            el.innerHTML = `${icon}<span>${label}</span>`;
+            el.style.color = isBad ? p.danger : 'var(--text-dim)';
+        }
+
+        // Balance-over-time line chart. Baseline always drawn; the what-if scenario
+        // overlays as a second series so the two futures can be compared directly.
+        function renderForecastChart(forecast, whatIf) {
+            const host = document.getElementById('forecast-chart');
+            if (!host) return;
+            if (!state.currentBalance) {
+                host.innerHTML = `<div class="chart-empty">Your balance forecast appears once you enter what's in the bank.</div>`;
+                return;
+            }
+
+            const p = chartPalette();
+            const W = 360, H = 168;
+            const padL = 8, padR = 8, padT = 20, padB = 24;
+            const plotW = W - padL - padR;
+            const plotH = H - padT - padB;
+
+            const series = [{ days: forecast.days, color: p.base, name: 'Now', dash: '' }];
+            if (whatIf) series.push({ days: whatIf.days, color: p.alt, name: 'After buy', dash: '5 4' });
+
+            const balances = series.flatMap(s => s.days.map(d => d.balance));
+            const goesNegative = balances.some(v => v < 0);
+            const allVals = balances.concat([0]);
+            let yMax = Math.max(...allVals);
+            let yMin = Math.min(...allVals);
+            const span = (yMax - yMin) || 1;
+            yMax += span * 0.14;
+            yMin -= span * 0.14;
+
+            const n = forecast.days.length;
+            const xAt = (i) => padL + (i / (n - 1)) * plotW;
+            const yAt = (v) => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+            const zeroY = yAt(0);
+
+            const lineFor = (days) => days.map((d, i) => `${i === 0 ? 'M' : 'L'}${xAt(i).toFixed(1)},${yAt(d.balance).toFixed(1)}`).join(' ');
+
+            // Danger band only when the balance actually dips below zero — otherwise
+            // the padding under the curve would paint a permanent false alarm.
+            let dangerBand = '';
+            if (goesNegative) {
+                const bandTop = Math.min(zeroY, padT + plotH);
+                dangerBand = `<rect x="${padL}" y="${bandTop}" width="${plotW}" height="${Math.max(0, (padT + plotH) - bandTop)}" fill="${p.danger}" opacity="0.13"/>`;
+            }
+
+            const zeroLine = (goesNegative && zeroY > padT && zeroY < padT + plotH)
+                ? `<line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${padL + plotW}" y2="${zeroY.toFixed(1)}" stroke="${p.danger}" stroke-width="1" stroke-dasharray="3 3" opacity="0.65"/>`
+                : '';
+
+            // Payday markers
+            const paydayMarks = forecast.days.map((d, i) => {
+                if (!d.income) return '';
+                const x = xAt(i), y = yAt(d.balance);
+                return `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${(padT + plotH).toFixed(1)}" stroke="${p.good}" stroke-width="1" opacity="0.3"/>
+                        <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${p.good}" stroke="var(--surface-card, #141a1b)" stroke-width="2"/>`;
+            }).join('');
+
+            const areaPath = `${lineFor(forecast.days)} L${xAt(n - 1).toFixed(1)},${Math.min(zeroY, padT + plotH).toFixed(1)} L${padL},${Math.min(zeroY, padT + plotH).toFixed(1)} Z`;
+
+            const linePaths = series.map(s =>
+                `<path d="${lineFor(s.days)}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`
+            ).join('');
+
+            // Direct label on the valley — also the contrast relief the palette needs.
+            const valleyIdx = forecast.days.findIndex(d => d.ts === forecast.minTs);
+            const vx = xAt(valleyIdx < 0 ? 0 : valleyIdx), vy = yAt(forecast.minBalance);
+            const valleyColor = forecast.minBalance < 0 ? p.danger : p.base;
+            const labelSide = vx > W * 0.6 ? -1 : 1;
+            const valleyLabel = `
+                <circle cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="4.5" fill="${valleyColor}" stroke="var(--surface-card, #141a1b)" stroke-width="2"/>
+                <text x="${(vx + labelSide * 8).toFixed(1)}" y="${(vy + (vy < padT + 24 ? 16 : -9)).toFixed(1)}"
+                      text-anchor="${labelSide === 1 ? 'start' : 'end'}" fill="${valleyColor}"
+                      font-size="11" font-weight="700">${money(forecast.minBalance)}</text>`;
+
+            const fmtAxis = (ts) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const axis = [0, Math.floor((n - 1) / 2), n - 1].map(i => {
+                const anchor = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle');
+                return `<text x="${xAt(i).toFixed(1)}" y="${H - 7}" text-anchor="${anchor}" fill="${p.muted}" font-size="10">${i === 0 ? 'Today' : fmtAxis(forecast.days[i].ts)}</text>`;
+            }).join('');
+
+            const legend = whatIf
+                ? `<div class="chart-legend">
+                     <span><i style="background:${p.base}"></i>Now</span>
+                     <span><i style="background:${p.alt}" class="dashed"></i>After this buy</span>
+                     <span><i style="background:${p.good}"></i>Payday</span>
+                   </div>`
+                : `<div class="chart-legend"><span><i style="background:${p.good}"></i>Payday</span></div>`;
+
+            host.innerHTML = `
+                <svg viewBox="0 0 ${W} ${H}" class="forecast-svg" role="img"
+                     aria-label="Projected bank balance for the next ${state.horizonDays} days">
+                    <defs>
+                        <linearGradient id="balFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${p.base}" stop-opacity="0.28"/>
+                            <stop offset="100%" stop-color="${p.base}" stop-opacity="0.02"/>
+                        </linearGradient>
+                    </defs>
+                    ${dangerBand}
+                    <path d="${areaPath}" fill="url(#balFill)"/>
+                    ${zeroLine}
+                    ${paydayMarks}
+                    ${linePaths}
+                    ${valleyLabel}
+                    ${axis}
+                    <rect id="chart-hit" x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="transparent"/>
+                    <g id="chart-cursor" style="display:none">
+                        <line y1="${padT}" y2="${padT + plotH}" stroke="${p.muted}" stroke-width="1"/>
+                        <circle r="4" fill="${p.base}" stroke="var(--surface-card, #141a1b)" stroke-width="2"/>
+                    </g>
+                </svg>
+                <div class="chart-tooltip" id="chart-tooltip"></div>
+                ${legend}
+            `;
+
+            attachChartHover(host, forecast, whatIf, { xAt, yAt, padL, plotW, n });
+        }
+
+        function attachChartHover(host, forecast, whatIf, geo) {
+            const svg = host.querySelector('svg');
+            const hit = host.querySelector('#chart-hit');
+            const cursor = host.querySelector('#chart-cursor');
+            const tip = host.querySelector('#chart-tooltip');
+            if (!svg || !hit || !cursor || !tip) return;
+
+            const show = (evt) => {
+                const box = svg.getBoundingClientRect();
+                const px = (evt.touches ? evt.touches[0].clientX : evt.clientX) - box.left;
+                const ratio = px / box.width * 360;
+                let i = Math.round(((ratio - geo.padL) / geo.plotW) * (geo.n - 1));
+                i = Math.max(0, Math.min(geo.n - 1, i));
+
+                const d = forecast.days[i];
+                const x = geo.xAt(i), y = geo.yAt(d.balance);
+                cursor.style.display = '';
+                cursor.querySelector('line').setAttribute('x1', x);
+                cursor.querySelector('line').setAttribute('x2', x);
+                cursor.querySelector('circle').setAttribute('cx', x);
+                cursor.querySelector('circle').setAttribute('cy', y);
+
+                const dateStr = d.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const bills = d.items.filter(it => it.kind === 'bill');
+                let detail = '';
+                if (d.income) detail += `<div class="tt-line tt-in">+$${Math.round(d.income).toLocaleString()} pay</div>`;
+                bills.forEach(b => { detail += `<div class="tt-line">−$${Math.round(b.amount).toLocaleString()} ${b.name}</div>`; });
+                if (d.purchase) detail += `<div class="tt-line tt-buy">−$${Math.round(d.purchase).toLocaleString()} this purchase</div>`;
+                if (whatIf) detail += `<div class="tt-line tt-alt">After buy: ${money(whatIf.days[i].balance)}</div>`;
+
+                tip.innerHTML = `<div class="tt-date">${dateStr}</div><div class="tt-bal">${money(d.balance)}</div>${detail}`;
+                tip.style.display = 'block';
+                const leftPct = (x / 360) * 100;
+                tip.style.left = `${Math.min(72, Math.max(2, leftPct - 14))}%`;
+            };
+
+            const hide = () => { cursor.style.display = 'none'; tip.style.display = 'none'; };
+
+            hit.addEventListener('mousemove', show);
+            hit.addEventListener('mouseleave', hide);
+            hit.addEventListener('touchstart', show, { passive: true });
+            hit.addEventListener('touchmove', show, { passive: true });
+            hit.addEventListener('touchend', hide);
+        }
+
+        // --- 4c. WHAT-IF PURCHASE PROJECTION ---
+        function setWhatIfWhen(when, ts) {
+            state.whatIf.when = when;
+            if (ts !== undefined) state.whatIf.dateTs = ts;
+            recalculateCashFlow();
+        }
+
+        function whatIfTargetTs() {
+            const todayTs = startOfDay(new Date()).getTime();
+            if (state.whatIf.when === 'today') return todayTs;
+            if (state.whatIf.when === 'nextpay') return nextPaydayFrom(todayTs + MS_PER_DAY);
+            if (state.whatIf.when === 'custom' && state.whatIf.dateTs) return startOfDay(new Date(state.whatIf.dateTs)).getTime();
+            return todayTs;
+        }
+
+        function updateWhatIfAmount(val) {
+            const n = parseFloat(val);
+            state.whatIf.amount = isNaN(n) ? 0 : n;
+            recalculateCashFlow();
+        }
+
+        function updateWhatIfDate(val) {
+            if (!val) return;
+            const parsed = new Date(`${val}T00:00:00`);
+            if (isNaN(parsed.getTime())) return;
+            state.whatIf.when = 'custom';
+            state.whatIf.dateTs = parsed.getTime();
+            recalculateCashFlow();
+        }
+
+        function clearWhatIf() {
+            state.whatIf = { amount: 0, when: 'today', dateTs: null };
+            const amtEl = document.getElementById('whatif-amount');
+            if (amtEl) amtEl.value = '';
+            recalculateCashFlow();
+        }
+
+        // Scans forward for the first day this purchase can be made without pushing
+        // the forecast below the safety buffer — the "when can I actually afford it" answer.
+        function earliestAffordableTs(amount) {
+            const todayTs = startOfDay(new Date()).getTime();
+            const buffer = state.safetyBuffer || 0;
+            const scanDays = Math.max(state.horizonDays, 90);
+            for (let d = 0; d <= scanDays; d++) {
+                const ts = todayTs + (d * MS_PER_DAY);
+                const f = buildForecast({
+                    horizonDays: scanDays,
+                    purchases: [{ ts, amount }]
+                });
+                if (f.minBalance >= buffer) return ts;
+            }
+            return null;
+        }
+
+        function renderWhatIf(baseForecast) {
+            const forecast = baseForecast || buildForecast();
+            const resultEl = document.getElementById('whatif-result');
+            const amount = state.whatIf.amount;
+
+            // Keep the custom-date input in step with the chip selection.
+            const dateInput = document.getElementById('whatif-date');
+            if (dateInput && document.activeElement !== dateInput) {
+                const t = new Date(whatIfTargetTs());
+                dateInput.value = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+            }
+            ['today', 'nextpay', 'custom'].forEach(k => {
+                const chip = document.getElementById(`whatif-chip-${k}`);
+                if (chip) chip.classList.toggle('active', state.whatIf.when === k);
+            });
+
+            if (!amount || amount <= 0 || !state.currentBalance) {
+                if (resultEl) {
+                    resultEl.innerHTML = state.currentBalance
+                        ? `<div class="whatif-idle">Enter an amount to see how it changes the next ${state.horizonDays} days.</div>`
+                        : `<div class="whatif-idle">Add your bank balance first.</div>`;
+                }
+                renderForecastChart(forecast, null);
+                return;
+            }
+
+            const targetTs = whatIfTargetTs();
+            const scenario = buildForecast({ purchases: [{ ts: targetTs, amount }] });
+            renderForecastChart(forecast, scenario);
+
+            const p = chartPalette();
+            const buffer = state.safetyBuffer || 0;
+            const fmt = (ts) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            const low = Math.round(scenario.minBalance);
+            const lowDate = fmt(scenario.minTs);
+            const whenStr = fmt(targetTs);
+
+            let verdict, color, icon, detail;
+            if (scenario.firstNegativeTs !== null) {
+                verdict = 'You run out of money';
+                color = p.danger;
+                icon = '✕';
+                detail = `Buying on ${whenStr} puts you at <strong>-$${Math.abs(low).toLocaleString()}</strong> by ${fmt(scenario.firstNegativeTs)}.`;
+            } else if (scenario.minBalance < buffer || scenario.minBalance < 75) {
+                verdict = 'Doable, but tight';
+                color = '#fab219';
+                icon = '!';
+                detail = `You'd scrape through with <strong>$${low.toLocaleString()}</strong> left on ${lowDate}.`;
+            } else {
+                verdict = 'You can afford this';
+                color = p.good;
+                icon = '✓';
+                detail = `Lowest you'd get is <strong>$${low.toLocaleString()}</strong> on ${lowDate}.`;
+            }
+
+            // Only worth suggesting a better date when the chosen one hurts.
+            let suggestion = '';
+            if (scenario.firstNegativeTs !== null || scenario.minBalance < buffer) {
+                const safeTs = earliestAffordableTs(amount);
+                if (safeTs === null) {
+                    suggestion = `<div class="whatif-suggest">No date in the next 90 days fits this without going short. It's $${Math.round(amount).toLocaleString()} you don't have yet.</div>`;
+                } else if (safeTs > targetTs) {
+                    const waitDays = Math.round((safeTs - startOfDay(new Date()).getTime()) / MS_PER_DAY);
+                    suggestion = `<div class="whatif-suggest">
+                        <strong>Wait until ${fmt(safeTs)}</strong> — ${waitDays === 0 ? 'today' : `${waitDays} day${waitDays === 1 ? '' : 's'} away`} — and it clears without breaking anything.
+                        <button class="whatif-apply" onclick="setWhatIfWhen('custom', ${safeTs})">Try that date</button>
+                    </div>`;
+                }
+            }
+
+            const delta = Math.round(forecast.minBalance - scenario.minBalance);
+            if (resultEl) {
+                resultEl.innerHTML = `
+                    <div class="whatif-verdict" style="color:${color}">
+                        <span class="whatif-icon" style="background:${color}">${icon}</span>
+                        <span>${verdict}</span>
+                    </div>
+                    <div class="whatif-detail">${detail}</div>
+                    <div class="whatif-compare">
+                        <div><span>Low point now</span><strong>${money(forecast.minBalance)}</strong></div>
+                        <div class="whatif-arrow">→</div>
+                        <div><span>After buying</span><strong style="color:${color}">${money(low)}</strong></div>
+                    </div>
+                    ${suggestion}
+                `;
+            }
+        }
+
         // --- 5. INTERACTIONS & MODALS ---
         const balInput = document.getElementById("balance-input");
         const handleBalanceInput = (e) => {
@@ -1802,6 +2993,7 @@
                 toggleMasterBillsModal(false);
                 toggleAddBillModal(false);
                 modal.classList.add('open');
+                syncSettingsFields();
                 if (billsTab) billsTab.classList.remove('active');
                 if (overviewTab) overviewTab.classList.add('active');
             } else {
@@ -1984,38 +3176,55 @@
             const container = document.getElementById("ai-response-container");
             container.innerHTML = `<div class="ai-output-card">Processing query...</div>`;
 
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const forecast = buildForecast();
 
-            const cyclesSummary = [0, 1, 2].map(offset => {
-                const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
-                const end = new Date(state.cycleStart.getTime() + ((offset + 1) * 14 * msPerDay));
-                const cycleData = getExpensesForViewedCycle(offset);
-                const startingInc = offset === 0 ? state.currentBalance : 0;
-                const remaining = startingInc - cycleData.total;
-                let title = "Current cycle";
-                if (offset === 1) title = "Next cycle";
-                else if (offset === 2) title = "Following cycle";
-                const billsListStr = cycleData.list.map(b => `${b.name}: $${Math.round(b.amount)}`).join(", ");
-                const summary = offset === 0
-                    ? `Income $${Math.round(startingInc)}, Bills Due $${Math.round(cycleData.totalBillsSum)}, Remaining $${Math.round(remaining)}`
-                    : `Upcoming Bills $${Math.round(cycleData.totalBillsSum)}`;
-                return `${title} (${formatDate(start)} - ${formatDate(end)}): ${summary}. Bills: [${billsListStr}]`;
-            }).join('\n');
+            // The assistant reads the same day-by-day ledger the chart draws, so its
+            // answers match what the user is looking at.
+            const ledger = forecast.days
+                .filter(d => d.income || d.out > 0.5 || d.purchase)
+                .map(d => {
+                    const parts = [];
+                    if (d.income) parts.push(`+$${Math.round(d.income)} pay`);
+                    d.items.filter(i => i.kind === 'bill').forEach(i => parts.push(`-$${Math.round(i.amount)} ${i.name}`));
+                    const flex = d.items.filter(i => i.kind === 'flex').reduce((s, i) => s + i.amount, 0);
+                    if (flex > 0.5) parts.push(`-$${Math.round(flex)} everyday spending`);
+                    return `${formatDate(d.ts)}: ${parts.join(', ')} -> balance $${Math.round(d.balance)}`;
+                })
+                .join('\n');
+
+            const nextPay = nextPaydayFrom(forecast.todayTs + MS_PER_DAY);
+            const whatIfLine = state.whatIf.amount > 0
+                ? `\nThey are currently modelling a $${Math.round(state.whatIf.amount)} purchase on ${formatDate(whatIfTargetTs())}.`
+                : '';
 
             const financialContext = `
-                User Financial Context:
-                ${cyclesSummary}
+You are the assistant inside a CASH FLOW app, not a budgeting app. This user cannot save
+money and needs to make ends meet between paycheques. Never tell them to save more or
+build an emergency fund. Answer in terms of TIMING: what they can spend, when, and which
+date makes a purchase survivable.
 
-                Currently Viewing: ${state.viewOffset === 0 ? 'Current cycle' : (state.viewOffset === 1 ? 'Next cycle' : 'Following cycle')}
-                Days Remaining in Current Cycle: ${state.daysRemaining}
-                User Financial Query: "${queryText}"
+Today is ${formatDate(forecast.todayTs)}.
+Bank balance right now: $${Math.round(state.currentBalance)}
+Pay: $${Math.round(state.payAmount)} every 14 days. Next pay ${formatDate(nextPay)}.
+Safe to spend today while keeping a $${Math.round(state.safetyBuffer || 0)} cushion: $${Math.round(safeToSpendToday(forecast))}
+Lowest projected balance: $${Math.round(forecast.minBalance)} on ${formatDate(forecast.minTs)}
+${forecast.firstNegativeTs !== null ? `WARNING: balance goes negative on ${formatDate(forecast.firstNegativeTs)}.` : 'Balance stays above zero across the whole forecast.'}
+Forecast horizon: ${state.horizonDays} days.${whatIfLine}
 
-                Instructions: Answer the user's financial question directly, concisely, and accurately based on the context provided.
+Every upcoming money movement:
+${ledger}
+
+User question: "${queryText}"
+
+Answer directly and concisely in plain language, using the specific dollar amounts and
+dates above. If they ask whether they can afford something, say yes or no, name the date
+it would hurt, and give the earliest date it actually works.
             `;
 
-            let apiKey = getApiKey();
-            if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY") {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                container.innerHTML = `<div class="ai-output-card" style="color:var(--text-dim);">Add your Gemini API key above to use the assistant.</div>`;
                 promptNewApiKey();
                 return;
             }
@@ -2103,6 +3312,12 @@
         }
 
         async function processAudioWithGemini(audioBlob) {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                document.getElementById('gemini-input').value = "";
+                promptNewApiKey();
+                return;
+            }
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
             reader.onloadend = async () => {
@@ -2110,7 +3325,7 @@
                 document.getElementById('gemini-input').value = "Processing audio...";
 
                 try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getApiKey()}`, {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -2263,6 +3478,10 @@
             try {
                 const data = {
                     currentBalance: state.currentBalance,
+                    payAmount: state.payAmount,
+                    paydayAnchor: state.paydayAnchor,
+                    safetyBuffer: state.safetyBuffer,
+                    horizonDays: state.horizonDays,
                     biweeklyExpenses: state.biweeklyExpenses,
                     monthlyExpenses: state.monthlyExpenses,
                     deferredBills: state.deferredBills,
@@ -2288,6 +3507,10 @@
                         const balInput = document.getElementById("balance-input");
                         if (balInput) balInput.value = state.currentBalance;
                     }
+                    if (data.payAmount !== undefined) state.payAmount = data.payAmount;
+                    if (data.paydayAnchor) state.paydayAnchor = data.paydayAnchor;
+                    if (data.safetyBuffer !== undefined) state.safetyBuffer = data.safetyBuffer;
+                    if (data.horizonDays) state.horizonDays = data.horizonDays;
                     if (data.biweeklyExpenses) state.biweeklyExpenses = data.biweeklyExpenses;
                     if (data.monthlyExpenses) state.monthlyExpenses = data.monthlyExpenses;
                     if (data.deferredBills) state.deferredBills = data.deferredBills;
@@ -2301,6 +3524,8 @@
 
         // --- INIT ---
         loadStateFromLocalStorage();
+        const horizonSelectEl = document.getElementById('horizon-select');
+        if (horizonSelectEl) horizonSelectEl.value = String(state.horizonDays);
         updateCycleEngine();
         recalculateCashFlow();
 
@@ -2329,7 +3554,7 @@
         // --- PWA SERVICE WORKER REGISTRATION ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=5').then(registration => {
+                navigator.serviceWorker.register('sw.js?v=6').then(registration => {
                     registration.update();
                     console.log('SW registered: ', registration);
                 }).catch(registrationError => {
@@ -2446,6 +3671,10 @@
             try {
                 await setDoc(doc(db, "users", userId), {
                     currentBalance: state.currentBalance,
+                    payAmount: state.payAmount,
+                    paydayAnchor: state.paydayAnchor,
+                    safetyBuffer: state.safetyBuffer,
+                    horizonDays: state.horizonDays,
                     biweeklyExpenses: state.biweeklyExpenses,
                     monthlyExpenses: state.monthlyExpenses,
                     deferredBills: state.deferredBills,
@@ -2495,16 +3724,25 @@
                             const balInput = document.getElementById("balance-input");
                             if (balInput) balInput.value = state.currentBalance;
                         }
+                        if (remoteData.payAmount !== undefined)    state.payAmount    = remoteData.payAmount;
+                        if (remoteData.paydayAnchor)              state.paydayAnchor = remoteData.paydayAnchor;
+                        if (remoteData.safetyBuffer !== undefined) state.safetyBuffer = remoteData.safetyBuffer;
+                        if (remoteData.horizonDays)               state.horizonDays  = remoteData.horizonDays;
                         if (remoteData.biweeklyExpenses) state.biweeklyExpenses = remoteData.biweeklyExpenses;
                         if (remoteData.monthlyExpenses)  state.monthlyExpenses  = remoteData.monthlyExpenses;
                         if (remoteData.deferredBills)    state.deferredBills    = remoteData.deferredBills;
                         if (remoteData.paidBills)        state.paidBills        = remoteData.paidBills;
                         if (remoteData.customAmounts)    state.customAmounts    = remoteData.customAmounts;
 
+                        updateCycleEngine();
                         recalculateCashFlow();
                         try {
                             localStorage.setItem('simplemoney-state-data', JSON.stringify({
                                 currentBalance:    state.currentBalance,
+                                payAmount:         state.payAmount,
+                                paydayAnchor:      state.paydayAnchor,
+                                safetyBuffer:      state.safetyBuffer,
+                                horizonDays:       state.horizonDays,
                                 biweeklyExpenses:  state.biweeklyExpenses,
                                 monthlyExpenses:   state.monthlyExpenses,
                                 deferredBills:     state.deferredBills,
