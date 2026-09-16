@@ -1,0 +1,29 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Until the service account secret is added the deploy can't run, so the
+      # job reports what's missing instead of failing every push with a red X.
+      - id: key
+        run: echo "present=${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}" >> "$GITHUB_OUTPUT"
+
+      - if: steps.key.outputs.present == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: simplemoney-9a580
+
+      - if: steps.key.outputs.present != 'true'
+        run: |
+          echo "::notice::Deploy skipped. Add the FIREBASE_SERVICE_ACCOUNT secret under Settings > Secrets and variables > Actions to switch it on."
