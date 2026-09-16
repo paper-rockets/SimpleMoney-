@@ -1537,9 +1537,89 @@
             border: none !important;
         }
 
+        /* ── Strip the bill rows to date · name · amount ── */
+        .category-dot-dense {
+            width: 6px !important;
+            height: 6px !important;
+            border-radius: 50%;
+            flex-basis: 6px !important;
+            margin-right: 10px;
+        }
+        .category-dot-dense svg { display: none; }
+        .bill-dense-row.paid .category-dot-dense { opacity: 0.3; }
+
+        .date-col-dense {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            width: 40px !important;
+            height: auto !important;
+            flex-basis: 40px !important;
+            display: block !important;
+            text-align: left;
+        }
+        .date-dense-month { font-size: 0.56em !important; letter-spacing: 0.1em; color: var(--text-muted) !important; }
+        .date-dense-day { font-size: 0.86em !important; font-weight: 500 !important; color: var(--text-dim) !important; }
+
+        .bill-dense-row {
+            border-bottom: 1px solid var(--border-color);
+            min-height: 0 !important;
+            padding: 13px 0 !important;
+        }
+        .bill-dense-name { font-weight: 400 !important; font-size: 0.94em !important; }
+        .bill-dense-subtitle { font-size: 0.66em !important; letter-spacing: 0.08em; text-transform: uppercase; }
+        .bill-dense-row.paid { opacity: 0.35; }
+        .bill-dense-row.paid .bill-dense-name { text-decoration: line-through; }
+
+        .bill-dense-amount-wrap > span { display: none; }
+        .bill-amount-input {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            text-align: right;
+            font-weight: 500 !important;
+        }
+
+        .push-btn-quiet {
+            background: transparent !important;
+            border: none !important;
+            width: 24px !important;
+            height: 24px !important;
+            flex-basis: 24px !important;
+            opacity: 0.35;
+            color: var(--text-dim) !important;
+        }
+
+        .sub-group-label { font-size: 0.6em !important; letter-spacing: 0.16em; color: var(--text-muted); }
+
+        /* ── Quieter chart ── */
+        .chart-legend { opacity: 0.6; }
+
+        /* ── Flat bottom bar ── */
+        .bottom-nav-bar {
+            background: var(--bg-color) !important;
+            border-top: 1px solid var(--border-color) !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+        }
+        .nav-tab-label { display: none; }
+        .floating-add-btn {
+            background: transparent !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            box-shadow: none !important;
+            width: 42px !important;
+            height: 42px !important;
+            padding: 0 !important;
+        }
+        .floating-add-btn svg { flex: none; }
+
         @media (max-width: 600px) {
             .summary-section { padding: 0; gap: 7px; }
             .cycle-panel { min-height: 0; padding: 0 0 8px; }
+            .bill-dense-row { min-height: 0 !important; padding: 14px 0 !important; }
+            .bill-dense-name { font-size: 1em !important; }
+            .date-col-dense { width: 44px !important; flex-basis: 44px !important; }
             .cycle-panel-tag { font-size: 0.7em; letter-spacing: 0.13em; }
             .cycle-panel-amount { font-size: 1.32em; }
             .cycle-panel-dates { font-size: 0.72em; }
@@ -2474,7 +2554,6 @@
                             </div>
                             <div class="bill-dense-info" onclick="togglePaid('${bill.id}')" style="cursor:pointer;">
                                 <div class="bill-dense-name">${bill.name}</div>
-                                <div class="bill-dense-subtitle">Biweekly · Flexible</div>
                             </div>
                         </div>
                         <div class="bill-dense-right">
@@ -2490,9 +2569,11 @@
                     const monthStr = billDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
                     const dayStr = billDate.getDate();
 
-                    let subtitle = `Due ${monthStr} ${dayStr}`;
-                    if (bill.isPushed) subtitle = `${monthStr} ${dayStr} · Pushed`;
-                    if (isOverdue) subtitle = `Overdue · Due ${monthStr} ${dayStr}`;
+                    // The date column already says when it's due, so only say something
+                    // here when there is something extra to say.
+                    let subtitle = '';
+                    if (bill.isPushed) subtitle = 'Pushed';
+                    if (isOverdue) subtitle = 'Overdue';
 
                     // Push / Return Button (only on unpaid bills)
                     let pushAction = '';
@@ -2515,7 +2596,7 @@
                             </div>
                             <div class="bill-dense-info" onclick="togglePaid('${bill.id}')" style="cursor:pointer;">
                                 <div class="bill-dense-name ${isOverdue ? 'overdue-text' : ''}">${bill.name}</div>
-                                <div class="bill-dense-subtitle ${isOverdue ? 'overdue-text' : ''}">${subtitle}</div>
+                                ${subtitle ? `<div class="bill-dense-subtitle ${isOverdue ? 'overdue-text' : ''}">${subtitle}</div>` : ''}
                             </div>
                         </div>
                         <div class="bill-dense-right">
