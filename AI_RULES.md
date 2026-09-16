@@ -51,3 +51,7 @@
 - Give me the server links again (computer + phone) and tell me in one plain line what I should now see (for example: "the background is now yellow").
 - If the change is NOT showing, or it looks wrong, tell me plainly and fix it BEFORE you say the task is done.
 - Never tell me something works if you have not actually checked that it works.
+
+## 10. Pushing to GitHub
+- Whenever I say "push to github", "github updated?", or ask about saving to GitHub, it means: stage all changes, commit them with a clean message, and push directly to the GitHub repository on `origin main`. Do not wait or ask for confirmation—just commit, push, and confirm when it is done.
+
