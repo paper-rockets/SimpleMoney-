@@ -2145,6 +2145,8 @@
             });
 
             const days = [];
+            const segments = [];
+            let segment = { startTs: todayTs, min: Infinity, minTs: todayTs };
             let balance = startBalance;
             let minBalance = Infinity;
             let minTs = todayTs;
@@ -2162,6 +2164,17 @@
                 const out = items.reduce((sum, i) => sum + i.amount, 0);
                 const purchase = purchaseByDay.get(ts) || 0;
 
+                // Whatever survives to payday gets spent, so each cycle stands on its
+                // own pay rather than inheriting a surplus that never really survives.
+                // Debt is different: it carries, because you can't spend your way out of it.
+                let spentLeftover = 0;
+                if (income) {
+                    spentLeftover = Math.max(0, balance);
+                    balance = Math.min(balance, 0);
+                    segments.push(segment);
+                    segment = { startTs: ts, min: Infinity, minTs: ts };
+                }
+
                 balance += income - out - purchase;
                 totalBills += out;
                 totalIncome += income;
@@ -2169,6 +2182,10 @@
                 if (balance < minBalance) {
                     minBalance = balance;
                     minTs = ts;
+                }
+                if (balance < segment.min) {
+                    segment.min = balance;
+                    segment.minTs = ts;
                 }
                 if (balance < 0 && firstNegativeTs === null) firstNegativeTs = ts;
 
@@ -2178,13 +2195,20 @@
                     income,
                     out,
                     purchase,
+                    spentLeftover,
                     items,
                     balance
                 });
             }
+            segments.push(segment);
+
+            const worst = segments.reduce((a, b) => (b.min < a.min ? b : a), segments[0]);
 
             return {
                 days,
+                segments,
+                currentSegment: segments[0],
+                worstSegment: worst,
                 minBalance: minBalance === Infinity ? startBalance : minBalance,
                 minTs,
                 firstNegativeTs,
@@ -2196,10 +2220,19 @@
             };
         }
 
-        // The honest headline: spend this much today and the lowest point in the
-        // forecast still clears your safety buffer.
+        // Which pay cycle a date falls into. Because leftovers don't roll forward,
+        // a purchase only ever affects the cycle it lands in.
+        function segmentForTs(forecast, ts) {
+            for (let i = forecast.segments.length - 1; i >= 0; i--) {
+                if (ts >= forecast.segments[i].startTs) return forecast.segments[i];
+            }
+            return forecast.currentSegment;
+        }
+
+        // Spending today can only hurt this cycle — next payday wipes the slate either
+        // way — so the headline is this cycle's low point, not the whole horizon's.
         function safeToSpendToday(forecast) {
-            return Math.max(0, forecast.minBalance - (state.safetyBuffer || 0));
+            return Math.max(0, forecast.currentSegment.min - (state.safetyBuffer || 0));
         }
 
         function changeHorizon(val) {
@@ -2481,24 +2514,28 @@
                 }
                 if (heroSubtextEl) heroSubtextEl.innerText = "Enter your bank balance below and we'll work out what's actually yours to spend.";
             } else {
-                const safe = safeToSpendToday(forecast);
-                if (forecast.firstNegativeTs !== null) {
-                    if (heroStatusEl) heroStatusEl.innerText = `SHORT BY ${fmtShort(forecast.minTs).toUpperCase()}`;
+                // Only this cycle matters for today's number: next payday resets the
+                // slate either way, so money spent now can't reach the cycles after it.
+                const cur = forecast.currentSegment;
+                const lastDayTs = nextPayTs - MS_PER_DAY;
+                if (cur.min < 0) {
+                    if (heroStatusEl) heroStatusEl.innerText = `SHORT BEFORE ${fmtShort(nextPayTs).toUpperCase()}`;
                     if (heroAmountEl) {
-                        heroAmountEl.innerText = money(forecast.minBalance);
+                        heroAmountEl.innerText = money(cur.min);
                         heroAmountEl.style.color = "var(--danger-color)";
                     }
-                    if (heroSubtextEl) heroSubtextEl.innerText = `You go under on ${fmtShort(forecast.firstNegativeTs)} and bottom out ${fmtShort(forecast.minTs)}. Next pay ${money(state.payAmount)} on ${fmtShort(nextPayTs)}.`;
+                    if (heroSubtextEl) heroSubtextEl.innerText = `This cycle can't cover its own bills. Next pay ${money(state.payAmount)} on ${fmtShort(nextPayTs)}.`;
                 } else {
                     if (heroStatusEl) heroStatusEl.innerText = "SAFE TO SPEND TODAY";
                     if (heroAmountEl) {
-                        heroAmountEl.innerText = `$${Math.round(safe).toLocaleString()}`;
+                        heroAmountEl.innerText = money(safeToSpendToday(forecast));
                         heroAmountEl.style.color = "var(--text-hi, #ffffff)";
                     }
-                    if (heroSubtextEl) heroSubtextEl.innerText = `Covers every bill through ${horizonStr}. Next pay $${Math.round(state.payAmount).toLocaleString()} on ${fmtShort(nextPayTs)}.`;
+                    if (heroSubtextEl) heroSubtextEl.innerText = `Covers this cycle's bills to ${fmtShort(lastDayTs)}. Next pay ${money(state.payAmount)} on ${fmtShort(nextPayTs)}.`;
                 }
             }
 
+            renderCycleHeaders();
             renderValleyRow(forecast);
             renderWhatIf(forecast);
 
@@ -2670,19 +2707,39 @@
             el.style.display = 'flex';
 
             const p = chartPalette();
-            const dateStr = new Date(forecast.minTs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const low = Math.round(forecast.minBalance);
-            const isBad = forecast.minBalance < 0;
-            const isTight = !isBad && forecast.minBalance < (state.safetyBuffer || 100);
+            const fmtD = (ts) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            // Each cycle lives or dies on its own pay, so the useful warning is
+            // "which upcoming cycle doesn't work", not one global low point.
+            const cur = forecast.currentSegment;
+            const future = forecast.segments.slice(1);
+            const worstFuture = future.length
+                ? future.reduce((a, b) => (b.min < a.min ? b : a), future[0])
+                : null;
+
+            if (worstFuture && worstFuture.min < (state.safetyBuffer || 75) && worstFuture.min < cur.min) {
+                const bad = worstFuture.min < 0;
+                const icon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${bad ? p.danger : '#fab219'}" stroke-width="2.5" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>`;
+                el.innerHTML = `${icon}<span>Pay from ${fmtD(worstFuture.startTs)} ${bad
+                    ? `won't cover its bills — <strong>${money(worstFuture.min)}</strong>`
+                    : `is tight — <strong>${money(worstFuture.min)}</strong> spare`}</span>`;
+                el.style.color = bad ? p.danger : 'var(--text-dim)';
+                return;
+            }
+
+            const dateStr = fmtD(cur.minTs);
+            const low = Math.round(cur.min);
+            const isBad = cur.min < 0;
+            const isTight = !isBad && cur.min < (state.safetyBuffer || 100);
 
             const icon = isBad
                 ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${p.danger}" stroke-width="2.5" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>`
                 : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${isTight ? '#fab219' : p.good}" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 
-            // When negative the hero already names the worst day, so this row adds the
-            // thing the hero can't: how much room is left before it starts going wrong.
+            // When this cycle is short the hero already names the gap, so this row says
+            // when relief arrives instead of repeating the number.
             const label = isBad
-                ? `${forecast.firstNegativeTs === forecast.todayTs ? 'Already short today' : `Holds until ${new Date(forecast.firstNegativeTs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`} — ${money(state.payAmount)} lands ${new Date(nextPaydayFrom(forecast.todayTs + MS_PER_DAY)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                ? `${money(state.payAmount)} lands ${fmtD(nextPaydayFrom(forecast.todayTs + MS_PER_DAY))} and the slate clears`
                 : `Lowest point <strong>${money(low)}</strong> on ${dateStr}`;
 
             el.innerHTML = `${icon}<span>${label}</span>`;
@@ -2898,7 +2955,7 @@
                     horizonDays: scanDays,
                     purchases: [{ ts, amount }]
                 });
-                if (f.minBalance >= buffer) return ts;
+                if (segmentForTs(f, ts).min >= buffer) return ts;
             }
             return null;
         }
@@ -2936,31 +2993,35 @@
             const p = chartPalette();
             const buffer = state.safetyBuffer || 0;
             const fmt = (ts) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-            const low = Math.round(scenario.minBalance);
-            const lowDate = fmt(scenario.minTs);
+            // The purchase only touches the cycle it lands in, so that cycle is what
+            // gets judged — a tight cycle two months out isn't this buy's fault.
+            const hitAfter = segmentForTs(scenario, targetTs);
+            const hitBefore = segmentForTs(forecast, targetTs);
+            const low = Math.round(hitAfter.min);
+            const lowDate = fmt(hitAfter.minTs);
             const whenStr = fmt(targetTs);
 
             let verdict, color, icon, detail;
-            if (scenario.firstNegativeTs !== null) {
+            if (hitAfter.min < 0) {
                 verdict = 'You run out of money';
                 color = p.danger;
                 icon = '✕';
-                detail = `Buying on ${whenStr} puts you at <strong>-$${Math.abs(low).toLocaleString()}</strong> by ${fmt(scenario.firstNegativeTs)}.`;
-            } else if (scenario.minBalance < buffer || scenario.minBalance < 75) {
+                detail = `Buying on ${whenStr} leaves that pay <strong>${money(hitAfter.min)}</strong> short by ${lowDate}.`;
+            } else if (hitAfter.min < Math.max(buffer, 75)) {
                 verdict = 'Doable, but tight';
                 color = '#fab219';
                 icon = '!';
-                detail = `You'd scrape through with <strong>$${low.toLocaleString()}</strong> left on ${lowDate}.`;
+                detail = `You'd scrape through with <strong>${money(low)}</strong> left on ${lowDate}.`;
             } else {
                 verdict = 'You can afford this';
                 color = p.good;
                 icon = '✓';
-                detail = `Lowest you'd get is <strong>$${low.toLocaleString()}</strong> on ${lowDate}.`;
+                detail = `Lowest you'd get is <strong>${money(low)}</strong> on ${lowDate}.`;
             }
 
             // Only worth suggesting a better date when the chosen one hurts.
             let suggestion = '';
-            if (scenario.firstNegativeTs !== null || scenario.minBalance < buffer) {
+            if (hitAfter.min < Math.max(buffer, 0)) {
                 const safeTs = earliestAffordableTs(amount);
                 if (safeTs === null) {
                     suggestion = `<div class="whatif-suggest">No date in the next 90 days fits this without going short. It's $${Math.round(amount).toLocaleString()} you don't have yet.</div>`;
@@ -2973,7 +3034,6 @@
                 }
             }
 
-            const delta = Math.round(forecast.minBalance - scenario.minBalance);
             if (resultEl) {
                 resultEl.innerHTML = `
                     <div class="whatif-verdict" style="color:${color}">
@@ -2982,7 +3042,7 @@
                     </div>
                     <div class="whatif-detail">${detail}</div>
                     <div class="whatif-compare">
-                        <div><span>Low point now</span><strong>${money(forecast.minBalance)}</strong></div>
+                        <div><span>That pay now</span><strong>${money(hitBefore.min)}</strong></div>
                         <div class="whatif-arrow">→</div>
                         <div><span>After buying</span><strong style="color:${color}">${money(low)}</strong></div>
                     </div>
@@ -3285,13 +3345,21 @@ money and needs to make ends meet between paycheques. Never tell them to save mo
 build an emergency fund. Answer in terms of TIMING: what they can spend, when, and which
 date makes a purchase survivable.
 
+IMPORTANT MODEL RULE: leftover money does NOT roll over. Whatever is left when a
+paycheque lands is treated as spent, so every cycle lives on its own $${Math.round(state.payAmount)}.
+Debt does carry. This means they can never "save up" across cycles — if something
+doesn't fit in one cycle's pay, the answer is to find a cycle with more room, not to
+put money aside.
+
 Today is ${formatDate(forecast.todayTs)}.
 Bank balance right now: $${Math.round(state.currentBalance)}
 Pay: $${Math.round(state.payAmount)} every 14 days. Next pay ${formatDate(nextPay)}.
 Safe to spend today while keeping a $${Math.round(state.safetyBuffer || 0)} cushion: $${Math.round(safeToSpendToday(forecast))}
-Lowest projected balance: $${Math.round(forecast.minBalance)} on ${formatDate(forecast.minTs)}
-${forecast.firstNegativeTs !== null ? `WARNING: balance goes negative on ${formatDate(forecast.firstNegativeTs)}.` : 'Balance stays above zero across the whole forecast.'}
+This cycle's low point: $${Math.round(forecast.currentSegment.min)} on ${formatDate(forecast.currentSegment.minTs)}
 Forecast horizon: ${state.horizonDays} days.${whatIfLine}
+
+Spare room in each upcoming cycle (this is what decides affordability):
+${forecast.segments.map(s => `Pay from ${formatDate(s.startTs)}: lowest $${Math.round(s.min)} on ${formatDate(s.minTs)}`).join('\n')}
 
 Every upcoming money movement:
 ${ledger}
