@@ -2866,6 +2866,7 @@
                     <button class="modal-close-btn" onclick="toggleOverviewModal(false)">&times;</button>
                 </div>
                 <button class="install-app-btn" id="install-app-btn" type="button" aria-label="Install SimpleMoney app">Install app</button>
+                <button class="sn-text-btn" type="button" onclick="resetAllData()" style="color:var(--danger-color);align-self:flex-start;font-size:0.8em;letter-spacing:0.08em;">RESET ALL DATA</button>
 
                 <!-- Income & Cash Flow -->
                 <div class="settings-card">
@@ -5101,6 +5102,22 @@ it would hurt, and give the earliest date it actually works.
         };
 
         // onAuthStateChanged (above) triggers loadStateFromFirebase — no duplicate call needed
-    </script>
+    
+        function resetAllData() {
+            if (!confirm('Delete all bills, payments and settings? This cannot be undone.')) return;
+            try { localStorage.removeItem('budgetState'); } catch(e) {}
+            if (window.saveStateToFirebase) {
+                // clear firebase too if signed in
+                try {
+                    const user = firebase && firebase.auth && firebase.auth().currentUser;
+                    if (user) {
+                        const db = firebase.firestore();
+                        db.collection('users').doc(user.uid).delete().catch(()=>{});
+                    }
+                } catch(e) {}
+            }
+            location.reload();
+        }
+</script>
 </body>
 </html>
