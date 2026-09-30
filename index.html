@@ -3574,7 +3574,7 @@
 
         // --- 4. CALCULATION & UI UPDATE ---
         function updateAmount(instanceId, val) {
-            const newAmount = parseFloat(val);
+            const newAmount = parseFloat(String(val).replace(',', '.'));
             if (isNaN(newAmount)) return;
 
             if (!state.customAmounts) state.customAmounts = {};
@@ -3747,7 +3747,7 @@
                         <div class="bill-dense-right">
                             <div class="bill-dense-amount-wrap">
                                 <span>$</span>
-                                <input type="number" inputmode="decimal" enterkeyhint="done" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                                <input type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
                             </div>
                         </div>
                     `;
@@ -3791,7 +3791,7 @@
                         <div class="bill-dense-right">
                             <div class="bill-dense-amount-wrap">
                                 <span>$</span>
-                                <input type="number" inputmode="decimal" enterkeyhint="done" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                                <input type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
                             </div>
                             ${pushAction}
                         </div>
@@ -4230,9 +4230,18 @@
             if (input && e.target !== input) input.focus();
         });
         // Amount fields: tap selects the whole number so typing replaces it; Enter saves.
+        // Phones place the cursor after the tap and drop the selection, so select on the next tick
+        // and swallow the tap's mouseup/touchend that would otherwise move the cursor.
         document.addEventListener('focusin', (e) => {
-            if (e.target.classList && e.target.classList.contains('bill-amount-input')) e.target.select();
+            const el = e.target;
+            if (!(el.classList && el.classList.contains('bill-amount-input'))) return;
+            el.dataset.justFocused = '1';
+            setTimeout(() => { el.select(); delete el.dataset.justFocused; }, 50);
         });
+        ['mouseup', 'touchend'].forEach(evt => document.addEventListener(evt, (e) => {
+            const el = e.target;
+            if (el.classList && el.classList.contains('bill-amount-input') && el.dataset.justFocused) e.preventDefault();
+        }, { passive: false }));
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('bill-amount-input')) e.target.blur();
         });
