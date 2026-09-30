@@ -2459,16 +2459,23 @@
             color: var(--text-main) !important;
         }
         .bill-dense-row.paid .bill-amount-input { color: var(--text-dim) !important; }
-        /* Amount editor: reads as plain text until tapped, then a clear underlined field */
-        .bill-amount-input {
-            border: none !important;
-            border-bottom: 1px solid transparent !important;
-            border-radius: 0 !important;
-            background: none !important;
-            text-align: right;
-            transition: border-color 0.15s;
+        /* Amount editor: the whole pill is the tap target, not just the digits */
+        .bill-dense-row .bill-dense-amount-wrap {
+            min-height: 40px;
+            padding: 0 0.75rem;
+            border-radius: 10px;
+            background: var(--surface-inset, rgba(128,128,128,0.10));
+            cursor: text;
+            transition: box-shadow 0.15s;
         }
-        .bill-amount-input:focus { border-bottom-color: var(--text-main) !important; }
+        .bill-dense-row .bill-dense-amount-wrap:focus-within { box-shadow: 0 0 0 1.5px var(--text-main); }
+        .bill-amount-input {
+            width: 56px !important;
+            height: 40px;
+            text-align: right;
+            background: none !important;
+            border: none !important;
+        }
         .bill-dense-amount-wrap, .bill-card-amount-wrap { color: var(--text-dim); font-weight: 500; }
 
         /* Tick box: same as SimpleNotes checklist box */
@@ -4216,6 +4223,12 @@
             balInput.addEventListener('blur', handleBalanceInput);
         }
 
+        // Tapping anywhere on the amount pill (including the "$") focuses the field.
+        document.addEventListener('click', (e) => {
+            const wrap = e.target.closest && e.target.closest('.bill-dense-amount-wrap');
+            const input = wrap && wrap.querySelector('.bill-amount-input');
+            if (input && e.target !== input) input.focus();
+        });
         // Amount fields: tap selects the whole number so typing replaces it; Enter saves.
         document.addEventListener('focusin', (e) => {
             if (e.target.classList && e.target.classList.contains('bill-amount-input')) e.target.select();
