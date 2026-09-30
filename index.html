@@ -3102,7 +3102,7 @@
                 { id: 'm_1', name: "Rent + buffer", amount: 1050.00, dueDay: 1 },
                 { id: 'm_2', name: "Daycare", amount: 220.00, dueDay: 1 },
                 { id: 'm_art', name: "Art class", amount: 40.00, dueDay: 1 },
-                { id: 'm_chatgpt', name: "ChatGPT", amount: 0, dueDay: 11, fixed: true },
+                { id: 'm_chatgpt', name: "ChatGPT", amount: 30.00, dueDay: 11, fixed: true },
                 { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
                 { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 },
                 { id: 'm_3', name: "Cafe Liegeois", amount: 25.00, dueDay: 7 },
@@ -4933,7 +4933,7 @@ it would hurt, and give the earliest date it actually works.
                 localStorage.setItem('sm-seeded-subscriptions', '1');
             } catch (e) { return; }
             [
-                { id: 'm_chatgpt', name: "ChatGPT", amount: 0, dueDay: 11, fixed: true },
+                { id: 'm_chatgpt', name: "ChatGPT", amount: 30.00, dueDay: 11, fixed: true },
                 { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
                 { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 }
             ].forEach(b => {
@@ -4946,6 +4946,11 @@ it would hurt, and give the earliest date it actually works.
             saveStateToLocalStorage();
         }
         seedNewDefaultBills();
+        // ChatGPT was first added with no amount; fill in the $30 on saved data.
+        (function () {
+            const g = state.monthlyExpenses.find(b => b.id === 'm_chatgpt');
+            if (g && !g.amount) { g.amount = 30.00; saveStateToLocalStorage(); }
+        })();
         const horizonSelectEl = document.getElementById('horizon-select');
         if (horizonSelectEl) horizonSelectEl.value = String(state.horizonDays);
         updateCycleEngine();
