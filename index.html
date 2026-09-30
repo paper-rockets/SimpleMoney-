@@ -3577,6 +3577,15 @@
             const newAmount = parseFloat(String(val).replace(',', '.'));
             if (isNaN(newAmount)) return;
 
+            // Guard against a slipped extra zero (200 -> 2000): big jumps need a confirm.
+            const current = getExpensesForViewedCycle().list.find(b => b.id === instanceId);
+            if (current && current.amount > 0 && newAmount >= current.amount * 3 && newAmount - current.amount >= 100) {
+                if (!confirm(`Change ${current.name} from ${money(current.amount)} to ${money(newAmount)}?`)) {
+                    recalculateCashFlow(); // put the old number back on screen
+                    return;
+                }
+            }
+
             if (!state.customAmounts) state.customAmounts = {};
             state.customAmounts[instanceId] = newAmount;
 
