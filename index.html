@@ -2390,6 +2390,10 @@
             color: var(--text-main);
         }
         .cycle-panel-dates { font-size: 0.75em !important; color: var(--text-dim); }
+        .cycle-nav { display: flex; justify-content: flex-end; gap: 0.25rem; margin: -1rem 0 1rem; }
+        .cycle-nav button { background: none; border: none; color: var(--text-dim); font-size: 1.3em; line-height: 1; padding: 0 0.4rem; cursor: pointer; }
+        .cycle-nav button:hover:not(:disabled) { color: var(--text-main); }
+        .cycle-nav button:disabled { opacity: 0.25; cursor: default; }
 
         /* Safe-to-spend: plain text on paper, no card */
         .summary-section {
@@ -2455,6 +2459,23 @@
             color: var(--text-main) !important;
         }
         .bill-dense-row.paid .bill-amount-input { color: var(--text-dim) !important; }
+        /* Amount editor: the whole pill is the tap target, not just the digits */
+        .bill-dense-row .bill-dense-amount-wrap {
+            min-height: 40px;
+            padding: 0 0.75rem;
+            border-radius: 10px;
+            background: var(--surface-inset, rgba(128,128,128,0.10));
+            cursor: text;
+            transition: box-shadow 0.15s;
+        }
+        .bill-dense-row .bill-dense-amount-wrap:focus-within { box-shadow: 0 0 0 1.5px var(--text-main); }
+        .bill-amount-input {
+            width: 56px !important;
+            height: 40px;
+            text-align: right;
+            background: none !important;
+            border: none !important;
+        }
         .bill-dense-amount-wrap, .bill-card-amount-wrap { color: var(--text-dim); font-weight: 500; }
 
         /* Tick box: same as SimpleNotes checklist box */
@@ -2721,6 +2742,11 @@
         <!-- Current and Next Cycle Bill Totals -->
         <div class="cycle-panels-row" id="cycle-header">
             <!-- Populated via JS: CURRENT & NEXT -->
+        </div>
+
+        <div class="cycle-nav" aria-label="Browse cycles">
+            <button type="button" id="cycle-prev-btn" onclick="shiftCycleWindow(-1)" aria-label="Earlier cycles">&lsaquo;</button>
+            <button type="button" id="cycle-next-btn" onclick="shiftCycleWindow(1)" aria-label="Later cycles">&rsaquo;</button>
         </div>
 
         <!-- Primary Spendable-Now Summary -->
@@ -3052,6 +3078,7 @@
             daysRemaining: 14,
             currentCycleIndex: 0,
             viewOffset: 0,
+            cycleWindow: 0, // first of the three cycle panels on screen
 
             // Income: pay lands every 14 days, anchored to paydayAnchor.
             payAmount: 1790.00,
@@ -3074,6 +3101,10 @@
             monthlyExpenses: [
                 { id: 'm_1', name: "Rent + buffer", amount: 1050.00, dueDay: 1 },
                 { id: 'm_2', name: "Daycare", amount: 220.00, dueDay: 1 },
+                { id: 'm_art', name: "Art class", amount: 40.00, dueDay: 1 },
+                { id: 'm_chatgpt', name: "ChatGPT", amount: 0, dueDay: 11, fixed: true },
+                { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
+                { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 },
                 { id: 'm_3', name: "Cafe Liegeois", amount: 25.00, dueDay: 7 },
                 { id: 'm_4', name: "Purchase Interest", amount: 60.00, dueDay: 10 },
                 { id: 'm_5', name: "Iegeek", amount: 5.00, dueDay: 10 },
@@ -3093,6 +3124,8 @@
         };
 
         // --- 2. TIME ENGINE ---
+        const CYCLE_COUNT = 6;
+        const CYCLE_TAGS = ["THIS CYCLE", "NEXT CYCLE", "AFTER", "IN 3 CYCLES", "IN 4 CYCLES", "IN 5 CYCLES"];
         const MS_PER_DAY = 1000 * 60 * 60 * 24;
         let BASE_PAYDAY = new Date('2026-07-17T00:00:00');
 
@@ -3205,7 +3238,6 @@
                 let flexTotal = 0;
                 state.biweeklyExpenses.forEach(exp => {
                     const instanceId = `${exp.id}_cycle_${cycleIndex}`;
-                    if (state.paidBills.includes(instanceId)) return;
                     const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
                         ? state.customAmounts[instanceId]
                         : exp.amount;
@@ -3378,7 +3410,7 @@
             const msPerDay = 1000 * 60 * 60 * 24;
             const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-            const cycles = [0, 1, 2].map(offset => {
+            const cycles = [0, 1, 2].map(i => state.cycleWindow + i).map(offset => {
                 const start = new Date(state.cycleStart.getTime() + (offset * 14 * msPerDay));
                 const end = new Date(start.getTime() + (14 * msPerDay));
                 const inclusiveEnd = new Date(start.getTime() + (13 * msPerDay));
@@ -3393,7 +3425,7 @@
 
             const headerHTML = cycles.map(c => {
                 const isSelected = c.offset === state.viewOffset;
-                const tag = ["THIS CYCLE", "NEXT CYCLE", "AFTER"][c.offset];
+                const tag = CYCLE_TAGS[c.offset];
 
                 let footer = `${formatDate(c.start)} – ${formatDate(c.inclusiveEnd)}`;
                 if (c.offset === 0 && projection) {
@@ -3402,7 +3434,7 @@
                         const left = Math.round(endDay.balance);
                         footer += ` · <span style="color:${left < 0 ? 'var(--danger-color)' : 'inherit'}">${money(left)} left</span>`;
                     }
-                } else if (c.offset === 2) {
+                } else if (c.offset >= 2) {
                     const left = Math.round((state.payAmount || 1790.00) - c.sum);
                     footer += ` · <span style="color:${left < 0 ? 'var(--danger-color)' : 'inherit'}">${money(left)} left</span>`;
                 } else if (c.offset === 1) {
@@ -3426,10 +3458,24 @@
 
             const headerEl = document.getElementById("cycle-header");
             if (headerEl) headerEl.innerHTML = headerHTML;
+
+            const prevBtn = document.getElementById("cycle-prev-btn");
+            const nextBtn = document.getElementById("cycle-next-btn");
+            if (prevBtn) prevBtn.disabled = state.cycleWindow <= 0;
+            if (nextBtn) nextBtn.disabled = state.cycleWindow >= CYCLE_COUNT - 3;
+        }
+
+        // Slide the three visible cycle panels earlier/later through the six tracked cycles.
+        function shiftCycleWindow(dir) {
+            state.cycleWindow = Math.max(0, Math.min(CYCLE_COUNT - 3, state.cycleWindow + dir));
+            // Keep the selection inside what is visible.
+            state.viewOffset = Math.max(state.cycleWindow, Math.min(state.cycleWindow + 2, state.viewOffset));
+            renderCycleHeaders();
+            recalculateCashFlow();
         }
 
         function setViewCycle(offset) {
-            state.viewOffset = (offset >= 0 && offset <= 2) ? offset : 0;
+            state.viewOffset = (offset >= 0 && offset < CYCLE_COUNT) ? offset : 0;
             renderCycleHeaders();
             recalculateCashFlow();
         }
@@ -3452,7 +3498,7 @@
 
             state.biweeklyExpenses.forEach(exp => {
                 const instanceId = `${exp.id}_cycle_${viewCycleIndex}`;
-                const isPaid = state.paidBills.includes(instanceId);
+                const isPaid = false; // flexible spending has no checkbox; it simply stays
                 const amount = (state.customAmounts && state.customAmounts[instanceId] !== undefined)
                     ? state.customAmounts[instanceId]
                     : exp.amount;
@@ -3467,7 +3513,7 @@
             // Scan from the current cycle only. Anything older is already settled in
             // the bank balance, and listing months of stale unpaid bills buried the
             // ones that actually matter.
-            const maxForecastEnd = new Date(state.cycleStart.getTime() + (3 * 14 * msPerDay));
+            const maxForecastEnd = new Date(state.cycleStart.getTime() + (CYCLE_COUNT * 14 * msPerDay));
             // Two months back as well, for bills pushed in from earlier cycles.
             let startMonthYear = { m: currentCycleStart.getMonth() - 2, y: currentCycleStart.getFullYear() };
             let endMonthYear = { m: maxForecastEnd.getMonth(), y: maxForecastEnd.getFullYear() };
@@ -3528,8 +3574,17 @@
 
         // --- 4. CALCULATION & UI UPDATE ---
         function updateAmount(instanceId, val) {
-            const newAmount = parseFloat(val);
+            const newAmount = parseFloat(String(val).replace(',', '.'));
             if (isNaN(newAmount)) return;
+
+            // Guard against a slipped extra zero (200 -> 2000): big jumps need a confirm.
+            const current = getExpensesForViewedCycle().list.find(b => b.id === instanceId);
+            if (current && current.amount > 0 && newAmount >= current.amount * 3 && newAmount - current.amount >= 100) {
+                if (!confirm(`Change ${current.name} from ${money(current.amount)} to ${money(newAmount)}?`)) {
+                    recalculateCashFlow(); // put the old number back on screen
+                    return;
+                }
+            }
 
             if (!state.customAmounts) state.customAmounts = {};
             state.customAmounts[instanceId] = newAmount;
@@ -3543,7 +3598,7 @@
         function recalculateCashFlow() {
             const cycleData = getExpensesForViewedCycle();
             const isUpcoming = state.viewOffset > 0;
-            const cycleTitle = ["Current", "Next", "After"][state.viewOffset];
+            const cycleTitle = ["Current", "Next", "After", "In 3 cycles", "In 4 cycles", "In 5 cycles"][state.viewOffset];
 
             // 2. Financial Metrics & Summary Section
             const heroStatusEl = document.getElementById("hero-status-label");
@@ -3618,7 +3673,7 @@
                 if (balLabel) balLabel.innerText = `Pay on ${fmtShort(targetCycleStart)}`;
                 if (balInput && document.activeElement !== balInput) {
                     // Only next cycle's pay can be changed here; the third uses the regular pay from settings.
-                    balInput.disabled = state.viewOffset === 2;
+                    balInput.disabled = state.viewOffset >= 2;
                     balInput.value = nextPay !== 0 ? nextPay : '';
                     balInput.placeholder = String(state.payAmount || 1790.00);
                 }
@@ -3692,20 +3747,16 @@
                 row.className = `bill-dense-row ${isPaid ? 'paid' : ''}`;
 
                 if (bill.isBiweekly) {
-                    const checkMark = isPaid ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--on-accent);"><polyline points="20 6 9 17 4 12"/></svg>` : '';
                     row.innerHTML = `
                         <div class="bill-dense-left">
-                            <div class="category-dot-dense" onclick="togglePaid('${bill.id}')" title="Mark as ${isPaid ? 'unpaid' : 'paid'}">
-                                ${checkMark}
-                            </div>
-                            <div class="bill-dense-info" onclick="togglePaid('${bill.id}')" style="cursor:pointer;">
+                            <div class="bill-dense-info">
                                 <div class="bill-dense-name">${bill.name}</div>
                             </div>
                         </div>
                         <div class="bill-dense-right">
-                            <div class="bill-dense-amount-wrap">
+                            <div class="bill-dense-amount-wrap" onclick="openAmountEditor('${bill.id}')">
                                 <span>$</span>
-                                <input type="number" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                                <input type="text" readonly tabindex="-1" class="bill-amount-input" value="${Math.round(bill.amount)}">
                             </div>
                         </div>
                     `;
@@ -3727,7 +3778,7 @@
                         if (bill.isPushed) {
                             pushAction += `<button class="push-btn-quiet push-btn-return" onclick="unpushBill('${bill.id}')" title="Move back one cycle">&laquo;</button>`;
                         }
-                        if (state.viewOffset < 2) {
+                        if (!bill.fixed && state.viewOffset < CYCLE_COUNT - 1) { // fixed = auto-charged, can't be moved
                             pushAction += `<button class="push-btn-quiet" onclick="pushBill('${bill.id}')" title="Push to the next cycle">&raquo;</button>`;
                         }
                     }
@@ -3747,9 +3798,9 @@
                             </div>
                         </div>
                         <div class="bill-dense-right">
-                            <div class="bill-dense-amount-wrap">
+                            <div class="bill-dense-amount-wrap" onclick="openAmountEditor('${bill.id}')">
                                 <span>$</span>
-                                <input type="number" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                                <input type="text" readonly tabindex="-1" class="bill-amount-input" value="${Math.round(bill.amount)}">
                             </div>
                             ${pushAction}
                         </div>
@@ -4180,6 +4231,73 @@
             balInput.addEventListener('change', handleBalanceInput);
             balInput.addEventListener('blur', handleBalanceInput);
         }
+
+        // Tap an amount -> small editor with the number pre-selected and -10/+10 nudges.
+        function openAmountEditor(instanceId) {
+            const bill = getExpensesForViewedCycle().list.find(b => b.id === instanceId);
+            if (!bill) return;
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.35);display:flex;align-items:flex-end;justify-content:center;';
+            const btn = 'flex:1;min-width:0;box-sizing:border-box;min-height:52px;border:1px solid var(--border-color);background:none;color:var(--text-main);border-radius:12px;font:inherit;font-size:1.05em;cursor:pointer;';
+            ov.innerHTML = `
+                <div style="width:100%;max-width:480px;background:var(--bg-color);color:var(--text-main);padding:1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;">
+                    <div style="color:var(--text-dim);margin-bottom:0.5rem;">${bill.name}</div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:2.4em;font-weight:500;margin-bottom:1rem;">
+                        <span style="color:var(--text-dim);">$</span>
+                        <input id="amt-edit-input" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="${Math.round(bill.amount)}" style="flex:1;min-width:0;font:inherit;color:inherit;background:none;border:none;outline:none;padding:0;">
+                    </div>
+                    <div style="display:flex;gap:0.6rem;margin-bottom:0.6rem;">
+                        <button type="button" data-step="-50" style="${btn}">&minus;50</button>
+                        <button type="button" data-step="-10" style="${btn}">&minus;10</button>
+                        <button type="button" data-step="10" style="${btn}">+10</button>
+                        <button type="button" data-step="50" style="${btn}">+50</button>
+                    </div>
+                    <div style="display:flex;gap:0.6rem;">
+                        <button type="button" data-act="cancel" style="${btn}">Cancel</button>
+                        <button type="button" data-act="save" style="${btn}background:var(--text-main);color:var(--bg-color);">Save</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(ov);
+            const input = ov.querySelector('#amt-edit-input');
+            const close = () => ov.remove();
+            const save = () => { const v = input.value; close(); updateAmount(instanceId, v); };
+            ov.addEventListener('click', (e) => {
+                if (e.target === ov) return close();
+                const t = e.target.closest('button');
+                if (!t) return;
+                if (t.dataset.step) {
+                    const cur = parseFloat(String(input.value).replace(',', '.')) || 0;
+                    input.value = Math.max(0, cur + parseFloat(t.dataset.step));
+                } else if (t.dataset.act === 'cancel') close();
+                else if (t.dataset.act === 'save') save();
+            });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') close(); });
+            input.focus();
+            input.select();
+        }
+
+        // Tapping anywhere on the amount pill (including the "$") focuses the field.
+        document.addEventListener('click', (e) => {
+            const wrap = e.target.closest && e.target.closest('.bill-dense-amount-wrap');
+            const input = wrap && wrap.querySelector('.bill-amount-input');
+            if (input && e.target !== input && !input.readOnly) input.focus();
+        });
+        // Amount fields: tap selects the whole number so typing replaces it; Enter saves.
+        // Phones place the cursor after the tap and drop the selection, so select on the next tick
+        // and swallow the tap's mouseup/touchend that would otherwise move the cursor.
+        document.addEventListener('focusin', (e) => {
+            const el = e.target;
+            if (!(el.classList && el.classList.contains('bill-amount-input'))) return;
+            el.dataset.justFocused = '1';
+            setTimeout(() => { el.select(); delete el.dataset.justFocused; }, 50);
+        });
+        ['mouseup', 'touchend'].forEach(evt => document.addEventListener(evt, (e) => {
+            const el = e.target;
+            if (el.classList && el.classList.contains('bill-amount-input') && el.dataset.justFocused) e.preventDefault();
+        }, { passive: false }));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('bill-amount-input')) e.target.blur();
+        });
 
         function pushBill(instanceId) {
             // Each push moves the bill one more cycle later.
@@ -4808,6 +4926,26 @@ it would hurt, and give the earliest date it actually works.
 
         // --- INIT ---
         loadStateFromLocalStorage();
+        // Saved data replaces the defaults, so slip newly added default bills in once.
+        function seedNewDefaultBills() {
+            try {
+                if (localStorage.getItem('sm-seeded-subscriptions')) return;
+                localStorage.setItem('sm-seeded-subscriptions', '1');
+            } catch (e) { return; }
+            [
+                { id: 'm_chatgpt', name: "ChatGPT", amount: 0, dueDay: 11, fixed: true },
+                { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
+                { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 }
+            ].forEach(b => {
+                if (!state.monthlyExpenses.some(x => x.id === b.id)) state.monthlyExpenses.push(b);
+            });
+            // Art class was seeded by an earlier version of this function.
+            if (!state.monthlyExpenses.some(x => x.id === 'm_art') && !localStorage.getItem('sm-seeded-art-class')) {
+                state.monthlyExpenses.push({ id: 'm_art', name: "Art class", amount: 40.00, dueDay: 1 });
+            }
+            saveStateToLocalStorage();
+        }
+        seedNewDefaultBills();
         const horizonSelectEl = document.getElementById('horizon-select');
         if (horizonSelectEl) horizonSelectEl.value = String(state.horizonDays);
         updateCycleEngine();
