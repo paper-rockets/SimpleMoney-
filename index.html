@@ -3095,6 +3095,9 @@
                 { id: 'm_1', name: "Rent + buffer", amount: 1050.00, dueDay: 1 },
                 { id: 'm_2', name: "Daycare", amount: 220.00, dueDay: 1 },
                 { id: 'm_art', name: "Art class", amount: 40.00, dueDay: 1 },
+                { id: 'm_chatgpt', name: "ChatGPT", amount: 0, dueDay: 11, fixed: true },
+                { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
+                { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 },
                 { id: 'm_3', name: "Cafe Liegeois", amount: 25.00, dueDay: 7 },
                 { id: 'm_4', name: "Purchase Interest", amount: 60.00, dueDay: 10 },
                 { id: 'm_5', name: "Iegeek", amount: 5.00, dueDay: 10 },
@@ -3759,7 +3762,7 @@
                         if (bill.isPushed) {
                             pushAction += `<button class="push-btn-quiet push-btn-return" onclick="unpushBill('${bill.id}')" title="Move back one cycle">&laquo;</button>`;
                         }
-                        if (state.viewOffset < CYCLE_COUNT - 1) {
+                        if (!bill.fixed && state.viewOffset < CYCLE_COUNT - 1) { // fixed = auto-charged, can't be moved
                             pushAction += `<button class="push-btn-quiet" onclick="pushBill('${bill.id}')" title="Push to the next cycle">&raquo;</button>`;
                         }
                     }
@@ -4851,13 +4854,21 @@ it would hurt, and give the earliest date it actually works.
         // Saved data replaces the defaults, so slip newly added default bills in once.
         function seedNewDefaultBills() {
             try {
-                if (localStorage.getItem('sm-seeded-art-class')) return;
-                localStorage.setItem('sm-seeded-art-class', '1');
+                if (localStorage.getItem('sm-seeded-subscriptions')) return;
+                localStorage.setItem('sm-seeded-subscriptions', '1');
             } catch (e) { return; }
-            if (!state.monthlyExpenses.some(b => b.id === 'm_art')) {
+            [
+                { id: 'm_chatgpt', name: "ChatGPT", amount: 0, dueDay: 11, fixed: true },
+                { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
+                { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 }
+            ].forEach(b => {
+                if (!state.monthlyExpenses.some(x => x.id === b.id)) state.monthlyExpenses.push(b);
+            });
+            // Art class was seeded by an earlier version of this function.
+            if (!state.monthlyExpenses.some(x => x.id === 'm_art') && !localStorage.getItem('sm-seeded-art-class')) {
                 state.monthlyExpenses.push({ id: 'm_art', name: "Art class", amount: 40.00, dueDay: 1 });
-                saveStateToLocalStorage();
             }
+            saveStateToLocalStorage();
         }
         seedNewDefaultBills();
         const horizonSelectEl = document.getElementById('horizon-select');
