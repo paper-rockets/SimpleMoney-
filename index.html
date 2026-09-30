@@ -3754,9 +3754,9 @@
                             </div>
                         </div>
                         <div class="bill-dense-right">
-                            <div class="bill-dense-amount-wrap">
+                            <div class="bill-dense-amount-wrap" onclick="openAmountEditor('${bill.id}')">
                                 <span>$</span>
-                                <input type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                                <input type="text" readonly tabindex="-1" class="bill-amount-input" value="${Math.round(bill.amount)}">
                             </div>
                         </div>
                     `;
@@ -3798,9 +3798,9 @@
                             </div>
                         </div>
                         <div class="bill-dense-right">
-                            <div class="bill-dense-amount-wrap">
+                            <div class="bill-dense-amount-wrap" onclick="openAmountEditor('${bill.id}')">
                                 <span>$</span>
-                                <input type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" class="bill-amount-input" value="${Math.round(bill.amount)}" onchange="updateAmount('${bill.id}', this.value)" step="0.01">
+                                <input type="text" readonly tabindex="-1" class="bill-amount-input" value="${Math.round(bill.amount)}">
                             </div>
                             ${pushAction}
                         </div>
@@ -4232,11 +4232,55 @@
             balInput.addEventListener('blur', handleBalanceInput);
         }
 
+        // Tap an amount -> small editor with the number pre-selected and -10/+10 nudges.
+        function openAmountEditor(instanceId) {
+            const bill = getExpensesForViewedCycle().list.find(b => b.id === instanceId);
+            if (!bill) return;
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.35);display:flex;align-items:flex-end;justify-content:center;';
+            const btn = 'flex:1;min-width:0;box-sizing:border-box;min-height:52px;border:1px solid var(--border-color);background:none;color:var(--text-main);border-radius:12px;font:inherit;font-size:1.05em;cursor:pointer;';
+            ov.innerHTML = `
+                <div style="width:100%;max-width:480px;background:var(--bg-color);color:var(--text-main);padding:1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;">
+                    <div style="color:var(--text-dim);margin-bottom:0.5rem;">${bill.name}</div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:2.4em;font-weight:500;margin-bottom:1rem;">
+                        <span style="color:var(--text-dim);">$</span>
+                        <input id="amt-edit-input" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="${Math.round(bill.amount)}" style="flex:1;min-width:0;font:inherit;color:inherit;background:none;border:none;outline:none;padding:0;">
+                    </div>
+                    <div style="display:flex;gap:0.6rem;margin-bottom:0.6rem;">
+                        <button type="button" data-step="-50" style="${btn}">&minus;50</button>
+                        <button type="button" data-step="-10" style="${btn}">&minus;10</button>
+                        <button type="button" data-step="10" style="${btn}">+10</button>
+                        <button type="button" data-step="50" style="${btn}">+50</button>
+                    </div>
+                    <div style="display:flex;gap:0.6rem;">
+                        <button type="button" data-act="cancel" style="${btn}">Cancel</button>
+                        <button type="button" data-act="save" style="${btn}background:var(--text-main);color:var(--bg-color);">Save</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(ov);
+            const input = ov.querySelector('#amt-edit-input');
+            const close = () => ov.remove();
+            const save = () => { const v = input.value; close(); updateAmount(instanceId, v); };
+            ov.addEventListener('click', (e) => {
+                if (e.target === ov) return close();
+                const t = e.target.closest('button');
+                if (!t) return;
+                if (t.dataset.step) {
+                    const cur = parseFloat(String(input.value).replace(',', '.')) || 0;
+                    input.value = Math.max(0, cur + parseFloat(t.dataset.step));
+                } else if (t.dataset.act === 'cancel') close();
+                else if (t.dataset.act === 'save') save();
+            });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') close(); });
+            input.focus();
+            input.select();
+        }
+
         // Tapping anywhere on the amount pill (including the "$") focuses the field.
         document.addEventListener('click', (e) => {
             const wrap = e.target.closest && e.target.closest('.bill-dense-amount-wrap');
             const input = wrap && wrap.querySelector('.bill-amount-input');
-            if (input && e.target !== input) input.focus();
+            if (input && e.target !== input && !input.readOnly) input.focus();
         });
         // Amount fields: tap selects the whole number so typing replaces it; Enter saves.
         // Phones place the cursor after the tap and drop the selection, so select on the next tick
