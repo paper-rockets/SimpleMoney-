@@ -3103,8 +3103,10 @@
                 { id: 'm_2', name: "Daycare", amount: 220.00, dueDay: 1 },
                 { id: 'm_art', name: "Art class", amount: 40.00, dueDay: 1 },
                 { id: 'm_chatgpt', name: "ChatGPT", amount: 30.00, dueDay: 11, fixed: true },
-                { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
-                { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 },
+                { id: 'm_codex1', name: "Codex 1", amount: 29.00, dueDay: 3 },
+                { id: 'm_codex2', name: "Codex 2", amount: 29.00, dueDay: 10 },
+                { id: 'm_claude1', name: "Claude 1", amount: 32.00, dueDay: 2 },
+                { id: 'm_claude2', name: "Claude 2", amount: 32.00, dueDay: 19 },
                 { id: 'm_3', name: "Cafe Liegeois", amount: 25.00, dueDay: 7 },
                 { id: 'm_4', name: "Purchase Interest", amount: 60.00, dueDay: 10 },
                 { id: 'm_5', name: "Iegeek", amount: 5.00, dueDay: 10 },
@@ -4934,8 +4936,10 @@ it would hurt, and give the earliest date it actually works.
             } catch (e) { return; }
             [
                 { id: 'm_chatgpt', name: "ChatGPT", amount: 30.00, dueDay: 11, fixed: true },
-                { id: 'm_claude1', name: "Claude", amount: 30.00, dueDay: 20 },
-                { id: 'm_claude2', name: "Claude", amount: 30.00, dueDay: 24 }
+                { id: 'm_codex1', name: "Codex 1", amount: 29.00, dueDay: 3 },
+                { id: 'm_codex2', name: "Codex 2", amount: 29.00, dueDay: 10 },
+                { id: 'm_claude1', name: "Claude 1", amount: 32.00, dueDay: 2 },
+                { id: 'm_claude2', name: "Claude 2", amount: 32.00, dueDay: 19 }
             ].forEach(b => {
                 if (!state.monthlyExpenses.some(x => x.id === b.id)) state.monthlyExpenses.push(b);
             });
