@@ -2892,6 +2892,7 @@
                     <button class="modal-close-btn" onclick="toggleOverviewModal(false)">&times;</button>
                 </div>
                 <button class="install-app-btn" id="install-app-btn" type="button" aria-label="Install SimpleMoney app">Install app</button>
+                <button class="sn-text-btn" type="button" onclick="exportAllData()" style="align-self:flex-start;font-size:0.8em;letter-spacing:0.08em;">EXPORT MY DATA</button>
                 <button class="sn-text-btn" type="button" onclick="resetAllData()" style="color:var(--danger-color);align-self:flex-start;font-size:0.8em;letter-spacing:0.08em;">RESET ALL DATA</button>
 
                 <!-- Income & Cash Flow -->
@@ -5250,6 +5251,31 @@ it would hurt, and give the earliest date it actually works.
 
         // onAuthStateChanged (above) triggers loadStateFromFirebase — no duplicate call needed
     
+        // Saves everything stored on this device to a file (the Gemini API key is left out on purpose).
+        window.exportAllData = function exportAllData() {
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k === 'gemini-api-key') continue;
+                data[k] = localStorage.getItem(k);
+            }
+            const payload = {
+                app: 'SimpleMoney',
+                exportedAt: new Date().toISOString(),
+                state: (function () { try { return JSON.parse(data['simplemoney-state-data'] || 'null'); } catch (e) { return null; } })(),
+                localStorage: data
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'simplemoney-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+        };
+
         function resetAllData() {
             if (!confirm('Delete all bills, payments and settings? This cannot be undone.')) return;
             try { localStorage.removeItem('budgetState'); } catch(e) {}
