@@ -2893,6 +2893,8 @@
                 </div>
                 <button class="install-app-btn" id="install-app-btn" type="button" aria-label="Install SimpleMoney app">Install app</button>
                 <button class="sn-text-btn" type="button" onclick="exportAllData()" style="align-self:flex-start;font-size:0.8em;letter-spacing:0.08em;">EXPORT MY DATA</button>
+                <button class="sn-text-btn" type="button" onclick="document.getElementById('import-file-input').click()" style="align-self:flex-start;font-size:0.8em;letter-spacing:0.08em;">IMPORT MY DATA</button>
+                <input type="file" id="import-file-input" accept=".json,application/json" style="display:none" onchange="importAllData(this)">
                 <button class="sn-text-btn" type="button" onclick="resetAllData()" style="color:var(--danger-color);align-self:flex-start;font-size:0.8em;letter-spacing:0.08em;">RESET ALL DATA</button>
 
                 <!-- Income & Cash Flow -->
@@ -5274,6 +5276,38 @@ it would hurt, and give the earliest date it actually works.
             a.click();
             a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 4000);
+        };
+
+        // Restores a backup made by EXPORT MY DATA. Only SimpleMoney's own keys are touched.
+        window.importAllData = function importAllData(input) {
+            const file = input.files && input.files[0];
+            input.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onerror = () => alert('Could not read that file.');
+            reader.onload = () => {
+                let backup;
+                try { backup = JSON.parse(reader.result); } catch (e) { alert('That file is not a valid backup.'); return; }
+                const ls = backup && backup.localStorage;
+                let stateStr = ls && ls['simplemoney-state-data'];
+                if (!stateStr && backup && backup.state) stateStr = JSON.stringify(backup.state);
+                let parsed;
+                try { parsed = JSON.parse(stateStr); } catch (e) { parsed = null; }
+                if (backup.app !== 'SimpleMoney' || !parsed || !Array.isArray(parsed.monthlyExpenses)) {
+                    alert('That file is not a SimpleMoney backup.');
+                    return;
+                }
+                if (!confirm('Replace the data on this device with this backup? Your current data here will be overwritten.')) return;
+                // Make sure the restored copy counts as the newest, so cloud sync does not overwrite it.
+                parsed.updatedAt = new Date().toISOString();
+                localStorage.setItem('simplemoney-state-data', JSON.stringify(parsed));
+                ['budget-theme-key', 'budget-size-key', 'sm-seeded-subscriptions', 'simplemoney_user_id'].forEach(k => {
+                    if (ls && typeof ls[k] === 'string') localStorage.setItem(k, ls[k]);
+                });
+                alert('Backup restored.');
+                location.reload();
+            };
+            reader.readAsText(file);
         };
 
         function resetAllData() {
